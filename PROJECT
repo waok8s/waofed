@@ -1,0 +1,6 @@
+domain: bitmedia.co.jp
+layout:
+- go.kubebuilder.io/v3
+projectName: waofed
+repo: git.bitmedia.ne.jp/k8s/waofed
+version: "3"
