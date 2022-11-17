@@ -3,4 +3,10 @@ layout:
 - go.kubebuilder.io/v3
 projectName: waofed
 repo: git.bitmedia.ne.jp/k8s/waofed
+resources:
+- controller: true
+  domain: bitmedia.co.jp
+  group: waofed
+  kind: AutoRSP
+  version: v1beta1
 version: "3"
