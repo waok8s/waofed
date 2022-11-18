@@ -120,6 +120,14 @@ func convertUnstructuredFieldToObject[T any](fieldName string, unstructuredObj m
 	if !ok {
 		return obj, fmt.Errorf("could not get %s", fieldName)
 	}
+
+	// Type assertion doesn't work, need to convert via JSON.
+	//
+	// obj, ok = v.(T)
+	// if !ok { // always false
+	// 	return obj, fmt.Errorf("bad type assertion")
+	// }
+
 	p, err := json.Marshal(&v)
 	if err != nil {
 		return obj, fmt.Errorf("could not encode %s: %v", fieldName, err)
