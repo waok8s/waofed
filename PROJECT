@@ -2,7 +2,7 @@ domain: bitmedia.co.jp
 layout:
 - go.kubebuilder.io/v3
 projectName: waofed
-repo: git.bitmedia.ne.jp/k8s/waofed
+repo: github.com/Nedopro2022/waofed
 resources:
 - controller: true
   domain: bitmedia.co.jp
@@ -16,6 +16,6 @@ resources:
   domain: bitmedia.co.jp
   group: waofed
   kind: WAOFedConfig
-  path: git.bitmedia.ne.jp/k8s/waofed/api/v1beta1
+  path: github.com/Nedopro2022/waofed/api/v1beta1
   version: v1beta1
 version: "3"

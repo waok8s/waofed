@@ -1,4 +1,4 @@
-module git.bitmedia.ne.jp/k8s/waofed
+module github.com/Nedopro2022/waofed
 
 go 1.19
 

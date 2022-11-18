@@ -15,8 +15,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	waofedv1beta1 "git.bitmedia.ne.jp/k8s/waofed/api/v1beta1"
-	"git.bitmedia.ne.jp/k8s/waofed/controllers"
+	waofedv1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
+	"github.com/Nedopro2022/waofed/controllers"
 	//+kubebuilder:scaffold:imports
 )
 

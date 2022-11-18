@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	waofedv1beta1 "git.bitmedia.ne.jp/k8s/waofed/api/v1beta1"
+	waofedv1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
 )
 
 // WAOFedConfigReconciler reconciles a WAOFedConfig object
