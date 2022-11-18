@@ -6,9 +6,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - waofed.bitmedia.co.jp
+  - scheduling.kubefed.io
   resources:
-  - autorsps
+  - replicaschedulingpreferences
   verbs:
   - create
   - delete
@@ -18,19 +18,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - waofed.bitmedia.co.jp
+  - types.kubefed.io
   resources:
-  - autorsps/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - waofed.bitmedia.co.jp
-  resources:
-  - autorsps/status
+  - federateddeployments
   verbs:
   - get
-  - patch
-  - update
+  - list
+  - watch
 - apiGroups:
   - waofed.bitmedia.co.jp
   resources:
