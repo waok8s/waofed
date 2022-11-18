@@ -9,4 +9,13 @@ resources:
   group: waofed
   kind: AutoRSP
   version: v1beta1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: bitmedia.co.jp
+  group: waofed
+  kind: WAOFedConfig
+  path: git.bitmedia.ne.jp/k8s/waofed/api/v1beta1
+  version: v1beta1
 version: "3"
