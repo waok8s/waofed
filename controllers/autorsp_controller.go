@@ -2,21 +2,16 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	fedschedv1a1 "sigs.k8s.io/kubefed/pkg/apis/scheduling/v1alpha1"
-	fedctrlutil "sigs.k8s.io/kubefed/pkg/controller/util"
 
 	v1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
 )
@@ -183,98 +178,8 @@ func setRSPClustersRoundRobin(
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *AutoRSPReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// TODO: watch RSP to prevent user deletion
 	return ctrl.NewControllerManagedBy(mgr).
 		For(newUnstructuredFederatedDeployment()).
-		// TODO: watch RSP to prevent user deletion
 		Complete(r)
-}
-
-var federatedDeploymentGVK = schema.GroupVersionKind{
-	Group:   "types.kubefed.io",
-	Kind:    "FederatedDeployment",
-	Version: "v1beta1",
-}
-
-func newUnstructuredFederatedDeployment() *unstructured.Unstructured {
-	u := &unstructured.Unstructured{}
-	u.SetGroupVersionKind(federatedDeploymentGVK)
-	return u
-}
-
-type structuredFederatedDeployment struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              struct {
-		Template  appsv1.Deployment                  `json:"template,omitempty"`
-		Placement fedctrlutil.GenericPlacementFields `json:"placement,omitempty"`
-	} `json:"spec,omitempty"`
-}
-
-func convertUnstructuredFieldToObject[T any](fieldName string, unstructuredObj map[string]any) (T, error) {
-	var obj T
-	v, ok := unstructuredObj[fieldName]
-	if !ok {
-		return obj, fmt.Errorf("could not get %s", fieldName)
-	}
-
-	// NOTE: Type assertion doesn't work, need to convert via JSON.
-	//
-	// obj, ok = v.(T)
-	// if !ok { // always false
-	// 	return obj, fmt.Errorf("bad type assertion")
-	// }
-
-	p, err := json.Marshal(&v)
-	if err != nil {
-		return obj, fmt.Errorf("could not encode %s: %v", fieldName, err)
-	}
-	if err := json.Unmarshal(p, &obj); err != nil {
-		return obj, fmt.Errorf("could not decode %s: %v", fieldName, err)
-	}
-
-	// DEBUG
-	// fmt.Printf("convertUnstructuredFieldToObject: %s\njson:\n%s\nobj:%#v\n", fieldName, p, obj)
-
-	return obj, nil
-}
-
-func convertToStructuredFederatedDeployment(in *unstructured.Unstructured) (*structuredFederatedDeployment, error) {
-	var out structuredFederatedDeployment
-
-	if in.GroupVersionKind() != federatedDeploymentGVK {
-		return nil, fmt.Errorf("wrong GVK: %v", in.GroupVersionKind())
-	}
-	out.TypeMeta = metav1.TypeMeta{
-		Kind:       federatedDeploymentGVK.Kind,
-		APIVersion: federatedDeploymentGVK.GroupVersion().Identifier(),
-	}
-
-	objMeta, err := convertUnstructuredFieldToObject[*metav1.ObjectMeta]("metadata", in.Object)
-	if err != nil {
-		return nil, err
-	}
-	out.ObjectMeta = *objMeta
-
-	v, ok := in.Object["spec"]
-	if !ok {
-		return nil, fmt.Errorf("could not get %s", "spec")
-	}
-	spec, ok := v.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("could not encode %s", "spec")
-	}
-
-	objPlacement, err := convertUnstructuredFieldToObject[*fedctrlutil.GenericPlacementFields]("placement", spec)
-	if err != nil {
-		return nil, err
-	}
-	out.Spec.Placement = *objPlacement
-
-	objDeployment, err := convertUnstructuredFieldToObject[*appsv1.Deployment]("template", spec)
-	if err != nil {
-		return nil, err
-	}
-	out.Spec.Template = *objDeployment
-
-	return &out, nil
 }
