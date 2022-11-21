@@ -2,7 +2,6 @@ apiVersion: waofed.bitmedia.co.jp/v1beta1
 kind: WAOFedConfig
 metadata:
   name: default
-  namespace: waofed-system
 spec:
   scheduling:
     autoRSPAnnotation: "waofed.bitmedia.co.jp/autorsp"

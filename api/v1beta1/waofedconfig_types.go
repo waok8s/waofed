@@ -9,8 +9,6 @@ const (
 
 	DefaultAutoRSPAnnotation = "waofed.bitmedia.co.jp/autorsp"
 
-	// WAOFedConfigNamespace specifies the namespace of the only instance of WAOFedConfig that exists in the cluster.
-	WAOFedConfigNamespace = "waofed-system"
 	// WAOFedConfigName specifies the name of the only instance of WAOFedConfig that exists in the cluster.
 	WAOFedConfigName = "default"
 )
@@ -44,7 +42,7 @@ type WAOFedConfigStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:resource:shortName=waofed;wfc
+//+kubebuilder:resource:scope=Cluster,shortName=waofed;wfc
 
 // WAOFedConfig is the Schema for the waofedconfigs API
 type WAOFedConfig struct {

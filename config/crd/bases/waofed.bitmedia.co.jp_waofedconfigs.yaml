@@ -16,7 +16,7 @@ spec:
     - waofed
     - wfc
     singular: waofedconfig
-  scope: Namespaced
+  scope: Cluster
   versions:
   - name: v1beta1
     schema:

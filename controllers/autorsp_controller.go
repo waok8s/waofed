@@ -38,7 +38,6 @@ func (r *AutoRSPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// get WAOFedConfig
 	wfc := &v1beta1.WAOFedConfig{}
 	wfc.Name = v1beta1.WAOFedConfigName
-	wfc.Namespace = v1beta1.WAOFedConfigNamespace
 	if err := r.Get(ctx, client.ObjectKeyFromObject(wfc), wfc); err != nil {
 		lg.Error(err, fmt.Sprintf("unable to get WAOFedConfig %s", client.ObjectKeyFromObject(wfc)))
 		return ctrl.Result{}, err
