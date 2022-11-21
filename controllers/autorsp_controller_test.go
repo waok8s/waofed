@@ -27,14 +27,17 @@ func Test_convertToStructuredFederatedDeployment(t *testing.T) {
 		{"normal",
 			args{&unstructured.Unstructured{Object: helperLoadJSON(t, "testdata/unstructuredFederatedDeploymentObject.json")}},
 			&structuredFederatedDeployment{
-				GroupVersionKind: federatedDeploymentGVK,
+				TypeMeta: metav1.TypeMeta{
+					Kind:       federatedDeploymentGVK.Kind,
+					APIVersion: federatedDeploymentGVK.GroupVersion().Identifier(),
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "fdeploy-sample",
 					Namespace: "default",
 				},
 				Spec: struct {
-					Template  appsv1.Deployment
-					Placement util.GenericPlacementFields
+					Template  appsv1.Deployment           `json:"template,omitempty"`
+					Placement util.GenericPlacementFields `json:"placement,omitempty"`
 				}{
 					Placement: util.GenericPlacementFields{
 						Clusters: []util.GenericClusterReference{
@@ -86,7 +89,8 @@ func Test_convertToStructuredFederatedDeployment(t *testing.T) {
 				}
 			}
 			// GVK
-			compare("GVK", got.GroupVersionKind, tt.want.GroupVersionKind)
+			compare("APIVersion", got.APIVersion, tt.want.APIVersion)
+			compare("Kind", got.Kind, tt.want.Kind)
 			// metadata
 			compare("Name", got.Name, tt.want.Name)
 			compare("Namespace", got.Namespace, tt.want.Namespace)

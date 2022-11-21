@@ -4,7 +4,7 @@ metadata:
   name: fdeploy-sample
   namespace: default
   annotations:
-    wao-autorsp: "true"
+    waofed.bitmedia.co.jp/autorsp: ""
 spec:
   template:
     metadata:

@@ -8,12 +8,17 @@ const (
 	OperatorName = "waofed"
 
 	DefaultAutoRSPAnnotation = "waofed.bitmedia.co.jp/autorsp"
+
+	// WAOFedConfigNamespace specifies the namespace of the only instance of WAOFedConfig that exists in the cluster.
+	WAOFedConfigNamespace = "waofed-system"
+	// WAOFedConfigName specifies the name of the only instance of WAOFedConfig that exists in the cluster.
+	WAOFedConfigName = "default"
 )
 
 type SchedulingSettings struct {
 	// AutoRSPAnnotation specifies annotation name in FederatedDeployment to enable AutoRSP.
 	// +optional
-	AutoRSPAnnotation string `json:"autoRSPAnnotation,omitempty"`
+	AutoRSPAnnotation *string `json:"autoRSPAnnotation,omitempty"`
 }
 
 type LoadBalancingSettings struct {
