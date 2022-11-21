@@ -22,7 +22,6 @@ import (
 
 const (
 	ControllerName = v1beta1.OperatorName + "-autorsp-controller"
-	AnnotAutoRSP   = "wao-autorsp"
 )
 
 // AutoRSPReconciler reconciles a AutoRSP object
@@ -51,7 +50,11 @@ func (r *AutoRSPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		lg.Error(err, "unable to get FederatedDeployment")
 		return ctrl.Result{}, err
 	}
-	_, ok := fdep.GetAnnotations()[AnnotAutoRSP]
+
+	// TODO: check WAOFedConfig
+	annot := v1beta1.DefaultAutoRSPAnnotation
+
+	_, ok := fdep.GetAnnotations()[annot]
 	if !ok {
 		lg.Info("FederatedDeployment doesn't have AutoRSP annotation")
 		return ctrl.Result{}, nil

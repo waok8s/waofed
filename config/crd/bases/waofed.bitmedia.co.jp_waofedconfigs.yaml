@@ -12,6 +12,9 @@ spec:
     kind: WAOFedConfig
     listKind: WAOFedConfigList
     plural: waofedconfigs
+    shortNames:
+    - waofed
+    - wfc
     singular: waofedconfig
   scope: Namespaced
   versions:
@@ -35,10 +38,17 @@ spec:
           spec:
             description: WAOFedConfigSpec defines the desired state of WAOFedConfig
             properties:
-              foo:
-                description: Foo is an example field of WAOFedConfig. Edit waofedconfig_types.go
-                  to remove/update
-                type: string
+              loadbalancing:
+                description: LoadBalancing owns load balancing settings.
+                type: object
+              scheduling:
+                description: Scheduling owns scheduling settings.
+                properties:
+                  autoRSPAnnotation:
+                    description: AutoRSPAnnotation specifies annotation name in FederatedDeployment
+                      to enable AutoRSP.
+                    type: string
+                type: object
             type: object
           status:
             description: WAOFedConfigStatus defines the observed state of WAOFedConfig
