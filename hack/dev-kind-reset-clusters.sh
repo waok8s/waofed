@@ -15,7 +15,7 @@ METRICS_SERVER_PATCH=${METRICS_SERVER_PATCH:-'''[{"op":"add","path":"/spec/templ
 # K8s 1.24 or newer requires v0.10.0 as https://github.com/kubernetes-sigs/kubefed/pull/1515
 KUBEFED_VER=${KUBEFED_VER:-"0.10.0"}
 
-# Usage: create-cluster <name>
+# Usage: create-cluster <name> <kind_image>
 function create-cluster {
     local kind_name=$1
     local name=kind-$1
