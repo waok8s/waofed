@@ -29,6 +29,12 @@
 
 ### Installation
 
+Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is used to generate webhook certificates.
+
+```sh
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
+```
+
 Install the controller with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
@@ -43,7 +49,7 @@ kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0/
 
 ### Uninstallation
 
-Delete the Operator and resources.
+Delete the Operator and resources with the following command.
 
 ```sh
 kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0/waofed.yaml
@@ -54,7 +60,7 @@ kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0
 This Operator uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder), so we basically follow the Kubebuilder way. See the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html) for details.
 
 
-NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following command.
+NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following command, but currently it is needed to re-create the clusters on every reboot.
 
 ```sh
 ./hack/dev-kind-reset-clusters.sh
