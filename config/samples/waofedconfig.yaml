@@ -1,9 +1,14 @@
 apiVersion: waofed.bitmedia.co.jp/v1beta1
 kind: WAOFedConfig
 metadata:
-  name: default
+  name: default # must be default
 spec:
+  kubefedNamespace: "kube-federation-system"
   scheduling:
-    autoRSPAnnotation: "waofed.bitmedia.co.jp/autorsp"
-  loadbalancing:
-    # TODO
+    selector:
+      # any: true # enable the optimizer by default
+      hasAnnotation: waofed.bitmedia.co.jp/scheduling
+    optimizer:
+      # method: "wao" # not yet implemented
+      method: "rr"
+  loadbalancing: null # not yet implemented

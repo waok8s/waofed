@@ -4,7 +4,7 @@ metadata:
   name: fdeploy-sample
   namespace: default
   annotations:
-    waofed.bitmedia.co.jp/autorsp: ""
+    waofed.bitmedia.co.jp/scheduling: ""
 spec:
   template:
     metadata:

@@ -7,16 +7,40 @@ import (
 const (
 	OperatorName = "waofed"
 
-	DefaultAutoRSPAnnotation = "waofed.bitmedia.co.jp/autorsp"
+	DefaultAutoRSPAnnotation = "waofed.bitmedia.co.jp/scheduling"
 
 	// WAOFedConfigName specifies the name of the only instance of WAOFedConfig that exists in the cluster.
 	WAOFedConfigName = "default"
 )
 
-type SchedulingSettings struct {
-	// AutoRSPAnnotation specifies annotation name in FederatedDeployment to enable AutoRSP.
+type RSPOptimizerMethod string
+
+const (
+	RSPOptimizerMethodRoundRobin = "rr"
+	RSPOptimizerMethodWAO        = "wao"
+)
+
+type RSPOptimizerSettings struct {
+	// Method specifies the method name to use.
+	Method RSPOptimizerMethod `json:"method,omitempty"`
+}
+
+type FederatedDeploymentSelector struct {
+	// Any matches any FederatedDeployment when set to true.
 	// +optional
-	AutoRSPAnnotation *string `json:"autoRSPAnnotation,omitempty"`
+	Any bool `json:"any,omitempty"`
+	// HasAnnotation specifies the annotation name within the FederatedDeployment to select.
+	// +optional
+	HasAnnotation string `json:"hasAnnotation,omitempty"`
+}
+
+type SchedulingSettings struct {
+	// Selector specifies the conditions that for FederatedDeployments to be affected by WAOFed.
+	// +optional
+	Selector FederatedDeploymentSelector `json:"selector,omitempty"`
+	// Optimizer owns optimizer settings that control how WAOFed generates ReplicaSchedulingPreferences.
+	// +optional
+	Optimizer RSPOptimizerSettings `json:"optimizer,omitempty"`
 }
 
 type LoadBalancingSettings struct {
@@ -25,6 +49,9 @@ type LoadBalancingSettings struct {
 
 // WAOFedConfigSpec defines the desired state of WAOFedConfig
 type WAOFedConfigSpec struct {
+	// KubeFedNamespace specifies the KubeFed namespace used to check KubeFedCluster resources to get the list of clusters.
+	KubeFedNamespace string `json:"kubefedNamespace,omitempty"`
+
 	// Scheduling owns scheduling settings.
 	// +optional
 	Scheduling *SchedulingSettings `json:"scheduling,omitempty"`

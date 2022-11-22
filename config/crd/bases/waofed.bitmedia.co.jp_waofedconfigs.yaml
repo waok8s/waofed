@@ -38,16 +38,37 @@ spec:
           spec:
             description: WAOFedConfigSpec defines the desired state of WAOFedConfig
             properties:
+              kubefedNamespace:
+                description: KubeFedNamespace specifies the KubeFed namespace used
+                  to check KubeFedCluster resources to get the list of clusters.
+                type: string
               loadbalancing:
                 description: LoadBalancing owns load balancing settings.
                 type: object
               scheduling:
                 description: Scheduling owns scheduling settings.
                 properties:
-                  autoRSPAnnotation:
-                    description: AutoRSPAnnotation specifies annotation name in FederatedDeployment
-                      to enable AutoRSP.
-                    type: string
+                  optimizer:
+                    description: Optimizer owns optimizer settings that control how
+                      WAOFed generates ReplicaSchedulingPreferences.
+                    properties:
+                      method:
+                        description: Method specifies the method name to use.
+                        type: string
+                    type: object
+                  selector:
+                    description: Selector specifies the conditions that for FederatedDeployments
+                      to be affected by WAOFed.
+                    properties:
+                      any:
+                        description: Any matches any FederatedDeployment when set
+                          to true.
+                        type: boolean
+                      hasAnnotation:
+                        description: HasAnnotation specifies the annotation name within
+                          the FederatedDeployment to select.
+                        type: string
+                    type: object
                 type: object
             type: object
           status:
