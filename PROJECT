@@ -7,7 +7,7 @@ resources:
 - controller: true
   domain: bitmedia.co.jp
   group: waofed
-  kind: AutoRSP
+  kind: RSPOptimizer
   version: v1beta1
 - api:
     crdVersion: v1

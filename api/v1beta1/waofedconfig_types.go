@@ -7,7 +7,7 @@ import (
 const (
 	OperatorName = "waofed"
 
-	DefaultAutoRSPAnnotation = "waofed.bitmedia.co.jp/scheduling"
+	DefaultRSPOptimizerAnnotation = "waofed.bitmedia.co.jp/scheduling"
 
 	// WAOFedConfigName specifies the name of the only instance of WAOFedConfig that exists in the cluster.
 	WAOFedConfigName = "default"

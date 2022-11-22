@@ -34,7 +34,7 @@ func init() {
 	utilruntime.Must(waofedv1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 
-	// AutoRSP Controller
+	// RSPOptimizer Controller
 	utilruntime.Must(fedcorev1b1.AddToScheme(scheme))
 	utilruntime.Must(fedschedv1a1.AddToScheme(scheme))
 }
@@ -80,11 +80,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.AutoRSPReconciler{
+	if err = (&controllers.RSPOptimizerReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AutoRSP")
+		setupLog.Error(err, "unable to create controller", "controller", "RSPOptimizer")
 		os.Exit(1)
 	}
 	if err = (&controllers.WAOFedConfigReconciler{

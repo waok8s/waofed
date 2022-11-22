@@ -3,8 +3,8 @@
     "kind": "FederatedDeployment",
     "metadata": {
         "annotations": {
-            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"types.kubefed.io/v1beta1\",\"kind\":\"FederatedDeployment\",\"metadata\":{\"annotations\":{\"wao-autorsp\":\"true\"},\"name\":\"fdeploy-sample\",\"namespace\":\"default\"},\"spec\":{\"placement\":{\"clusters\":[{\"name\":\"kind-waofed-1\"},{\"name\":\"kind-waofed-2\"},{\"name\":\"kind-waofed-3\"}]},\"template\":{\"metadata\":{\"labels\":{\"app\":\"nginx\"}},\"spec\":{\"replicas\":9,\"selector\":{\"matchLabels\":{\"app\":\"nginx\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"nginx\"}},\"spec\":{\"containers\":[{\"image\":\"nginx:1.23.2\",\"name\":\"nginx\",\"ports\":[{\"containerPort\":80}]}]}}}}}}\n",
-            "wao-autorsp": "true"
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"types.kubefed.io/v1beta1\",\"kind\":\"FederatedDeployment\",\"metadata\":{\"annotations\":{\"wao-rspoptimizer\":\"true\"},\"name\":\"fdeploy-sample\",\"namespace\":\"default\"},\"spec\":{\"placement\":{\"clusters\":[{\"name\":\"kind-waofed-1\"},{\"name\":\"kind-waofed-2\"},{\"name\":\"kind-waofed-3\"}]},\"template\":{\"metadata\":{\"labels\":{\"app\":\"nginx\"}},\"spec\":{\"replicas\":9,\"selector\":{\"matchLabels\":{\"app\":\"nginx\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"nginx\"}},\"spec\":{\"containers\":[{\"image\":\"nginx:1.23.2\",\"name\":\"nginx\",\"ports\":[{\"containerPort\":80}]}]}}}}}}\n",
+            "wao-rspoptimizer": "true"
         },
         "creationTimestamp": "2022-11-18T08:49:31Z",
         "finalizers": [
@@ -51,7 +51,7 @@
                         "f:annotations": {
                             ".": {},
                             "f:kubectl.kubernetes.io/last-applied-configuration": {},
-                            "f:wao-autorsp": {}
+                            "f:wao-rspoptimizer": {}
                         }
                     },
                     "f:spec": {

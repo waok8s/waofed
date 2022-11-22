@@ -18,11 +18,11 @@ import (
 )
 
 const (
-	ControllerName = v1beta1.OperatorName + "-autorsp-controller"
+	ControllerName = v1beta1.OperatorName + "-rspoptimizer-controller"
 )
 
-// AutoRSPReconciler reconciles a AutoRSP object
-type AutoRSPReconciler struct {
+// RSPOptimizerReconciler reconciles a RSPOptimizer object
+type RSPOptimizerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
@@ -34,7 +34,7 @@ type AutoRSPReconciler struct {
 //+kubebuilder:rbac:groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=get;list;watch
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *AutoRSPReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *RSPOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(newUnstructuredFederatedDeployment()).
 		Owns(&fedschedv1a1.ReplicaSchedulingPreference{}).
@@ -42,7 +42,7 @@ func (r *AutoRSPReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // Reconcile moves the current state of the cluster closer to the desired state.
-func (r *AutoRSPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *RSPOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	lg := log.FromContext(ctx)
 	lg.Info("Reconcile")
 
@@ -78,7 +78,7 @@ func (r *AutoRSPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{}, nil
 }
 
-func (r *AutoRSPReconciler) reconcileRSP(
+func (r *RSPOptimizerReconciler) reconcileRSP(
 	ctx context.Context, fdeploy *structuredFederatedDeployment, wfc *v1beta1.WAOFedConfig,
 ) error {
 	lg := log.FromContext(ctx)
@@ -89,7 +89,7 @@ func (r *AutoRSPReconciler) reconcileRSP(
 		// check selector.any
 		skip = false
 	} else if _, ok := fdeploy.GetAnnotations()[wfc.Spec.Scheduling.Selector.HasAnnotation]; ok {
-		// check AutoRSP annotation exists in the FederatedDeployment
+		// check RSPOptimizer annotation exists in the FederatedDeployment
 		// currently the value is ignored
 		skip = false
 	}
@@ -99,13 +99,13 @@ func (r *AutoRSPReconciler) reconcileRSP(
 		//
 		// An RSP associated with a FederatedDeployment and having an OwnerReference
 		// will be deleted by GC when the FederatedDeployment is deleted.
-		// However, in the case where the user deletes the AutoRSP annotation from
+		// However, in the case where the user deletes the RSPOptimizer annotation from
 		// the FederatedDeployment causes problems.
-		// Then the FederatedDeployment doesn't have any AutoRSP annotation,
+		// Then the FederatedDeployment doesn't have any RSPOptimizer annotation,
 		// so it should not be controlled by RSP, but RSP still exists and works.
 		// Therefore, explicitly delete the RSP here.
-		lg.Info("FederatedDeployment doesn't have AutoRSP annotation")
-		// find RSP created by AutoRSP and delete it
+		lg.Info("FederatedDeployment doesn't have RSPOptimizer annotation")
+		// find RSP created by RSPOptimizer and delete it
 		rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
 		rsp.SetNamespace(fdeploy.Namespace)
 		rsp.SetName(fdeploy.Name)
@@ -127,7 +127,7 @@ func (r *AutoRSPReconciler) reconcileRSP(
 		}
 		if ctrlRef != nil && sameOwner(*ctrlRef, *compareRef) {
 			// delete RSP
-			lg.Info("RSP having a Controller OwnerReference implies the RSP was created by AutoRSP, so delete it")
+			lg.Info("RSP having a Controller OwnerReference implies the RSP was created by RSPOptimizer, so delete it")
 			err := r.Delete(ctx, rsp)
 			if errors.IsNotFound(err) {
 				lg.Info("RSP is already deleted")
@@ -187,7 +187,7 @@ func (r *AutoRSPReconciler) reconcileRSP(
 	return nil
 }
 
-func (r *AutoRSPReconciler) optimizeClusterWeights(
+func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	ctx context.Context, fdeploy *structuredFederatedDeployment, wfc *v1beta1.WAOFedConfig,
 ) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	lg := log.FromContext(ctx)
@@ -213,7 +213,7 @@ func (r *AutoRSPReconciler) optimizeClusterWeights(
 	return cps, nil
 }
 
-func (r *AutoRSPReconciler) listClusters(ctx context.Context, statusReady bool, kubefedNS string) ([]string, error) {
+func (r *RSPOptimizerReconciler) listClusters(ctx context.Context, statusReady bool, kubefedNS string) ([]string, error) {
 	clusters := &fedcorev1b1.KubeFedClusterList{}
 	if err := r.List(ctx, clusters, &client.ListOptions{Namespace: kubefedNS}); err != nil {
 		return nil, err
