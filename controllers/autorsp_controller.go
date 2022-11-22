@@ -9,9 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 	fedcorecommon "sigs.k8s.io/kubefed/pkg/apis/core/common"
 	fedcorev1b1 "sigs.k8s.io/kubefed/pkg/apis/core/v1beta1"
 	fedschedv1a1 "sigs.k8s.io/kubefed/pkg/apis/scheduling/v1alpha1"
@@ -39,9 +37,7 @@ type AutoRSPReconciler struct {
 func (r *AutoRSPReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(newUnstructuredFederatedDeployment()).
-		// Watch RSPs to prevent user deletion.
-		// Note: Just watch all RSPs as they have the same Name and Namespace as the FederatedDeployment.
-		Watches(&source.Kind{Type: &fedschedv1a1.ReplicaSchedulingPreference{}}, &handler.EnqueueRequestForObject{}).
+		Owns(&fedschedv1a1.ReplicaSchedulingPreference{}).
 		Complete(r)
 }
 
@@ -62,7 +58,7 @@ func (r *AutoRSPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	fdep := newUnstructuredFederatedDeployment()
 	err := r.Get(ctx, req.NamespacedName, fdep)
 	if errors.IsNotFound(err) {
-		lg.Info("FederatedDeployment does not exist (already deleted or not yet deployed)")
+		lg.Info("FederatedDeployment is already deleted")
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
