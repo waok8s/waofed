@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	fedcorev1b1 "sigs.k8s.io/kubefed/pkg/apis/core/v1beta1"
 	fedschedv1a1 "sigs.k8s.io/kubefed/pkg/apis/scheduling/v1alpha1"
 
 	waofedv1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
@@ -34,6 +35,7 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 
 	// AutoRSP Controller
+	utilruntime.Must(fedcorev1b1.AddToScheme(scheme))
 	utilruntime.Must(fedschedv1a1.AddToScheme(scheme))
 }
 

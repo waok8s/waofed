@@ -12,6 +12,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	fedcorecommon "sigs.k8s.io/kubefed/pkg/apis/core/common"
+	fedcorev1b1 "sigs.k8s.io/kubefed/pkg/apis/core/v1beta1"
 	fedschedv1a1 "sigs.k8s.io/kubefed/pkg/apis/scheduling/v1alpha1"
 
 	v1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
@@ -27,9 +29,21 @@ type AutoRSPReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+//+kubebuilder:rbac:groups=core.kubefed.io,resources=kubefedclusters,verbs=get;list;watch
+//+kubebuilder:rbac:groups=core.kubefed.io,resources=kubefedclusters/status,verbs=get
 //+kubebuilder:rbac:groups=types.kubefed.io,resources=federateddeployments,verbs=get;list;watch
 //+kubebuilder:rbac:groups=scheduling.kubefed.io,resources=replicaschedulingpreferences,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=get;list;watch
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *AutoRSPReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(newUnstructuredFederatedDeployment()).
+		// Watch RSPs to prevent user deletion.
+		// Note: Just watch all RSPs as they have the same Name and Namespace as the FederatedDeployment.
+		Watches(&source.Kind{Type: &fedschedv1a1.ReplicaSchedulingPreference{}}, &handler.EnqueueRequestForObject{}).
+		Complete(r)
+}
 
 // Reconcile moves the current state of the cluster closer to the desired state.
 func (r *AutoRSPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -144,13 +158,14 @@ func (r *AutoRSPReconciler) reconcileRSP(
 		}
 		// set RSP clusters
 		const AutoRSPMethod = "rr" // TODO
-		solveFn, ok := solveFuncCollection[AutoRSPMethod]
+		lg.Info("optimize cluster weights", "method", AutoRSPMethod)
+		optimizeFn, ok := optimizeFuncCollection[AutoRSPMethod]
 		if !ok {
 			return fmt.Errorf("invalid method %v", AutoRSPMethod)
 		}
-		clusters, err := searchPreferredClusters(ctx, fdeploy, solveFn)
+		clusters, err := r.optimizeClusterWeights(ctx, fdeploy, optimizeFn)
 		if err != nil {
-			return fmt.Errorf("unable to search preferred clusters with method=%s: %w", AutoRSPMethod, err)
+			return err
 		}
 		rsp.Spec.Clusters = clusters
 		// set OwnerReference
@@ -175,42 +190,57 @@ func (r *AutoRSPReconciler) reconcileRSP(
 	return nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *AutoRSPReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(newUnstructuredFederatedDeployment()).
-		// Watch RSPs to prevent user deletion.
-		// Note: Just watch all RSPs as they have the same Name and Namespace as the FederatedDeployment.
-		Watches(&source.Kind{Type: &fedschedv1a1.ReplicaSchedulingPreference{}}, &handler.EnqueueRequestForObject{}).
-		Complete(r)
-}
-
-func searchPreferredClusters(
-	ctx context.Context, fdeploy *structuredFederatedDeployment, solveFn solveFunc,
+func (r *AutoRSPReconciler) optimizeClusterWeights(
+	ctx context.Context, fdeploy *structuredFederatedDeployment, optimizeFn optimizeFunc,
 ) (map[string]fedschedv1a1.ClusterPreferences, error) {
-	// get available clusters
-	availableClusters, err := listAvailableClusters(ctx)
+	lg := log.FromContext(ctx)
+	lg.Info("optimizeClusterWeights")
+
+	// get available clusters (status must be Ready)
+	cls, err := r.listClusters(ctx, true)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get available clusters: %w", err)
+		return nil, fmt.Errorf("unable to get clusters: %w", err)
 	}
+	lg.Info("list clusters", "clusters", cls)
 	// get optimal cluster weights
-	return solveFn(availableClusters)
+	cps, err := optimizeFn(cls)
+	if err != nil {
+		return nil, err
+	}
+	lg.Info("calc weights", "weights", cps)
+	return cps, nil
 }
 
-func listAvailableClusters(ctx context.Context) ([]string, error) {
+func (r *AutoRSPReconciler) listClusters(ctx context.Context, statusReady bool) ([]string, error) {
+	const kubefedNamespace = "kube-federation-system" // TODO
+	clusters := &fedcorev1b1.KubeFedClusterList{}
+	if err := r.List(ctx, clusters, &client.ListOptions{Namespace: kubefedNamespace}); err != nil {
+		return nil, err
+	}
 	var a []string
-	// TODO
+	for _, cl := range clusters.Items {
+		if !statusReady {
+			// add the cluster regardless of status
+			a = append(a, cl.Name)
+			continue
+		}
+		if statusReady && cl.Status.Conditions[len(cl.Status.Conditions)-1].Type == fedcorecommon.ClusterReady {
+			// add the cluster only if status is ready
+			a = append(a, cl.Name)
+			continue
+		}
+	}
 	return a, nil
 }
 
-type solveFunc func(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error)
+type optimizeFunc func(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error)
 
-var solveFuncCollection = map[string]solveFunc{
-	"rr":  solveFnRoundRobin,
-	"wao": solveFnWAO,
+var optimizeFuncCollection = map[string]optimizeFunc{
+	"rr":  optimizeFnRoundRobin,
+	"wao": optimizeFnWAO,
 }
 
-func solveFnRoundRobin(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error) {
+func optimizeFnRoundRobin(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	cps := make(map[string]fedschedv1a1.ClusterPreferences, len(clusters))
 	for _, cl := range clusters {
 		cps[cl] = fedschedv1a1.ClusterPreferences{
@@ -222,7 +252,7 @@ func solveFnRoundRobin(clusters []string) (map[string]fedschedv1a1.ClusterPrefer
 	return cps, nil
 }
 
-func solveFnWAO(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error) {
+func optimizeFnWAO(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	cps := make(map[string]fedschedv1a1.ClusterPreferences, len(clusters))
 	// TODO
 	return cps, nil

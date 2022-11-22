@@ -6,6 +6,20 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - core.kubefed.io
+  resources:
+  - kubefedclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - core.kubefed.io
+  resources:
+  - kubefedclusters/status
+  verbs:
+  - get
+- apiGroups:
   - scheduling.kubefed.io
   resources:
   - replicaschedulingpreferences
