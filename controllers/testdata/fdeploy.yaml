@@ -1,0 +1,33 @@
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  name: fdeploy-sample
+  namespace: default
+  annotations:
+    waofed.bitmedia.co.jp/scheduling: ""
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      replicas: 9
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+        # this speeds up the tests as no need to get container images
+        # spec:
+        #   containers:
+        #     - image: nginx:1.23.2
+        #       name: nginx
+        #       ports:
+        #         - containerPort: 80
+  placement:
+    clusters:
+      - name: kind-waofed-1
+      - name: kind-waofed-2
+      - name: kind-waofed-3

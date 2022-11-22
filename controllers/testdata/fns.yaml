@@ -1,0 +1,11 @@
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedNamespace
+metadata:
+  name: default
+  namespace: default
+spec:
+  placement:
+    clusters:
+      - name: kind-waofed-1
+      - name: kind-waofed-2
+      - name: kind-waofed-3
