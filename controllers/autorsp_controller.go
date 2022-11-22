@@ -198,12 +198,16 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	if !ok {
 		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
 	}
+
 	// get available clusters (status must be Ready)
-	cls, err := r.listClusters(ctx, true, wfc.Spec.KubeFedNamespace)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get clusters: %w", err)
+	statusReadyOnly := true
+	cll := &fedcorev1b1.KubeFedClusterList{}
+	if err := r.List(ctx, cll, &client.ListOptions{Namespace: wfc.Spec.KubeFedNamespace}); err != nil {
+		return nil, err
 	}
-	lg.Info("list clusters", "clusters", cls)
+	cls := listClusterNames(cll, statusReadyOnly)
+	lg.Info("list cluster names", "statusReadyOnly", statusReadyOnly, "clusters", cls)
+
 	// optimize cluster weights
 	cps, err := optimizeFn(cls)
 	if err != nil {
@@ -213,25 +217,23 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	return cps, nil
 }
 
-func (r *RSPOptimizerReconciler) listClusters(ctx context.Context, statusReady bool, kubefedNS string) ([]string, error) {
-	clusters := &fedcorev1b1.KubeFedClusterList{}
-	if err := r.List(ctx, clusters, &client.ListOptions{Namespace: kubefedNS}); err != nil {
-		return nil, err
-	}
-	var a []string
-	for _, cl := range clusters.Items {
+func listClusterNames(cll *fedcorev1b1.KubeFedClusterList, statusReady bool) []string {
+	a := make([]string, 0, len(cll.Items))
+	for _, cl := range cll.Items {
 		if !statusReady {
 			// add the cluster regardless of status
 			a = append(a, cl.Name)
 			continue
 		}
-		if statusReady && cl.Status.Conditions[len(cl.Status.Conditions)-1].Type == fedcorecommon.ClusterReady {
+		// NOTE: Assumes len(status.conditions) == 1, kubefed v0.10.0 only have one condition for /healthz probe.
+		// 	     Might consider checking all conditions are ready.
+		if statusReady && cl.Status.Conditions[0].Type == fedcorecommon.ClusterReady {
 			// add the cluster only if status is ready
 			a = append(a, cl.Name)
 			continue
 		}
 	}
-	return a, nil
+	return a
 }
 
 type optimizeFunc func(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error)
