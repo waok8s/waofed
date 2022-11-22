@@ -28,6 +28,4 @@ spec:
         #         - containerPort: 80
   placement:
     clusters:
-      - name: kind-waofed-1
-      - name: kind-waofed-2
-      - name: kind-waofed-3
+      - name: kind-waofed-test-0

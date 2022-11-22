@@ -1,3 +1,5 @@
+//go:build testOnExistingCluster
+
 package controllers_test
 
 import (
