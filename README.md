@@ -60,7 +60,7 @@ kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0
 This Operator uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder), so we basically follow the Kubebuilder way. See the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html) for details.
 
 
-NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following command, but currently it is needed to re-create the clusters on every reboot.
+NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following command, note that currently it is needed to re-create the clusters on every reboot.
 
 ```sh
 ./hack/dev-kind-reset-clusters.sh
