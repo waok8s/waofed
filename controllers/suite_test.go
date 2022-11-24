@@ -97,8 +97,8 @@ var _ = AfterSuite(func() {
 })
 
 var (
-	waitShort              = func() { time.Sleep(100 * time.Millisecond) }
-	waitLong               = func() { time.Sleep(1500 * time.Millisecond) }
+	waitShort              = func() { time.Sleep(300 * time.Millisecond) }
+	waitLong               = func() { time.Sleep(2000 * time.Millisecond) }
 	testKubeFedNS          = "kube-federation-system"
 	federatedDeploymentGVR = schema.GroupVersionResource{
 		Group:    "types.kubefed.io",
