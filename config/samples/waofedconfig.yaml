@@ -11,4 +11,4 @@ spec:
     optimizer:
       # method: "wao" # not yet implemented
       method: "rr"
-  loadbalancing: null # not yet implemented
+  # loadbalancing: null # not yet implemented
