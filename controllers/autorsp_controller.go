@@ -10,7 +10,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	fedcorecommon "sigs.k8s.io/kubefed/pkg/apis/core/common"
 	fedcorev1b1 "sigs.k8s.io/kubefed/pkg/apis/core/v1beta1"
 	fedschedv1a1 "sigs.k8s.io/kubefed/pkg/apis/scheduling/v1alpha1"
 
@@ -193,51 +192,54 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	lg.Info("optimizeClusterWeights")
 
 	// get cluster clusters
-	// TODO: currently considers all KubeFedClusters as candidates
-	//       need to check placement.clusters and placement.clusterSelector in FederatedDeployment.Spec
-	//       if no placement field, all (or no) clusters should be candidates (make it configurable)
-	//       if has placement.clusters field, the specified clusters should be candidates
-	//		 if only has placement.clusterSelector field, the selected clusters should be candidates
-	cll := &fedcorev1b1.KubeFedClusterList{}
-	if err := r.List(ctx, cll, &client.ListOptions{Namespace: wfc.Spec.KubeFedNamespace}); err != nil {
-		return nil, err
+	//   if has placement.clusters field, the specified clusters should be candidates
+	//   if only has placement.clusterSelector field, the selected clusters should be candidates
+	//   if no placement field, no (or all) clusters should be candidates (consider making it configurable)
+	if fdeploy.Spec.Placement == nil || (fdeploy.Spec.Placement.Clusters == nil && fdeploy.Spec.Placement.ClusterSelector == nil) {
+		lg.Info("no scheduling as spec.placement == nil", "spec.placement", fdeploy.Spec.Placement)
+		return map[string]fedschedv1a1.ClusterPreferences{}, nil
 	}
 
-	// filter clusters
-	onlyStatusReady := true
-	cls := listClusterNames(cll, onlyStatusReady)
-	lg.Info("list cluster names", "statusReadyOnly", onlyStatusReady, "clusters", cls)
+	var candidates []string
+	if fdeploy.Spec.Placement.Clusters != nil {
+		// placement.clusters is specified
+		lg.Info("placement.clusters found")
+		for _, c := range fdeploy.Spec.Placement.Clusters {
+			candidates = append(candidates, c.Name)
+		}
+	} else { // fdeploy.Spec.Placement.ClusterSelector != nil
+		// placement.clusterSelector is specified
+		lg.Info("placement.clusterSelector found")
+		sel, err := metav1.LabelSelectorAsSelector(fdeploy.Spec.Placement.ClusterSelector)
+		if err != nil {
+			lg.Error(err, "placement.clusterSelector")
+			return nil, err
+		}
+		cl := &fedcorev1b1.KubeFedClusterList{}
+		if err := r.List(ctx, cl, &client.ListOptions{
+			Namespace:     wfc.Spec.KubeFedNamespace,
+			LabelSelector: sel,
+		}); err != nil {
+			return nil, err
+		}
+		for _, c := range cl.Items {
+			candidates = append(candidates, c.Name)
+		}
+	}
+
+	lg.Info("candidate clusters", "clusters", candidates)
 
 	// optimize cluster weights
 	optimizeFn, ok := optimizeFuncCollection[wfc.Spec.Scheduling.Optimizer.Method]
 	if !ok {
 		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
 	}
-	cps, err := optimizeFn(cls)
+	cps, err := optimizeFn(candidates)
 	if err != nil {
 		return nil, err
 	}
 	lg.Info("optimize weights", "weights", cps)
 	return cps, nil
-}
-
-func listClusterNames(cll *fedcorev1b1.KubeFedClusterList, statusReady bool) []string {
-	a := make([]string, 0, len(cll.Items))
-	for _, cl := range cll.Items {
-		if !statusReady {
-			// add the cluster regardless of status
-			a = append(a, cl.Name)
-			continue
-		}
-		// NOTE: Assumes len(status.conditions) == 1, kubefed v0.10.0 only have one condition for /healthz probe.
-		// 	     Might consider checking all conditions are ready.
-		if statusReady && cl.Status.Conditions[0].Type == fedcorecommon.ClusterReady {
-			// add the cluster only if status is ready
-			a = append(a, cl.Name)
-			continue
-		}
-	}
-	return a
 }
 
 type optimizeFunc func(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error)
