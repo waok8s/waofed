@@ -14,4 +14,4 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - run: make test
+      - run: ./hack/test-reset-cluster.sh && ./hack/test-run.sh
