@@ -28,7 +28,6 @@ type RSPOptimizerReconciler struct {
 }
 
 //+kubebuilder:rbac:groups=core.kubefed.io,resources=kubefedclusters,verbs=get;list;watch
-//+kubebuilder:rbac:groups=core.kubefed.io,resources=kubefedclusters/status,verbs=get
 //+kubebuilder:rbac:groups=types.kubefed.io,resources=federateddeployments,verbs=get;list;watch
 //+kubebuilder:rbac:groups=scheduling.kubefed.io,resources=replicaschedulingpreferences,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=get;list;watch
