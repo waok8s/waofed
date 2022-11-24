@@ -153,7 +153,7 @@ func (r *RSPOptimizerReconciler) reconcileRSP(
 				TargetKind:                   fdeploy.Kind,
 				TotalReplicas:                *fdeploy.Spec.Template.Spec.Replicas,
 				Rebalance:                    true,
-				IntersectWithClusterSelector: true,
+				IntersectWithClusterSelector: false,
 				Clusters:                     nil,
 			}
 			// set RSP clusters
@@ -192,22 +192,27 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	lg := log.FromContext(ctx)
 	lg.Info("optimizeClusterWeights")
 
-	// get optimize function
-	optimizeFn, ok := optimizeFuncCollection[wfc.Spec.Scheduling.Optimizer.Method]
-	if !ok {
-		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
-	}
-
-	// get available clusters (status must be Ready)
-	statusReadyOnly := true
+	// get cluster clusters
+	// TODO: currently considers all KubeFedClusters as candidates
+	//       need to check placement.clusters and placement.clusterSelector in FederatedDeployment.Spec
+	//       if no placement field, all (or no) clusters should be candidates (make it configurable)
+	//       if has placement.clusters field, the specified clusters should be candidates
+	//		 if only has placement.clusterSelector field, the selected clusters should be candidates
 	cll := &fedcorev1b1.KubeFedClusterList{}
 	if err := r.List(ctx, cll, &client.ListOptions{Namespace: wfc.Spec.KubeFedNamespace}); err != nil {
 		return nil, err
 	}
-	cls := listClusterNames(cll, statusReadyOnly)
-	lg.Info("list cluster names", "statusReadyOnly", statusReadyOnly, "clusters", cls)
+
+	// filter clusters
+	onlyStatusReady := true
+	cls := listClusterNames(cll, onlyStatusReady)
+	lg.Info("list cluster names", "statusReadyOnly", onlyStatusReady, "clusters", cls)
 
 	// optimize cluster weights
+	optimizeFn, ok := optimizeFuncCollection[wfc.Spec.Scheduling.Optimizer.Method]
+	if !ok {
+		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
+	}
 	cps, err := optimizeFn(cls)
 	if err != nil {
 		return nil, err
