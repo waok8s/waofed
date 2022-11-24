@@ -11,22 +11,14 @@ KUBEFED_VER=$KUBEFEDCTL_VERSION
 
 # main
 
-cluster0=$PROJECT_NAME-0
-cluster1=$PROJECT_NAME-1
-cluster2=$PROJECT_NAME-2
-cluster3=$PROJECT_NAME-3
+cluster0=$PROJECT_NAME-test-0
 
 lib::start-docker
 
 lib::create-cluster "$cluster0" "$KIND_IMAGE"
-lib::create-cluster "$cluster1" "$KIND_IMAGE"
-lib::create-cluster "$cluster2" "$KIND_IMAGE"
-lib::create-cluster "$cluster3" "$KIND_IMAGE"
 
 lib::setup-kubefed "$cluster0" "$KUBEFED_VER"
-lib::join-kubefed "$cluster1" "$cluster0"
-lib::join-kubefed "$cluster2" "$cluster0"
-lib::join-kubefed "$cluster3" "$cluster0"
+lib::join-kubefed "$cluster0" "$cluster0"
 
 sleep 15
 
