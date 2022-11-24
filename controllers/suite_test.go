@@ -97,6 +97,8 @@ var _ = AfterSuite(func() {
 })
 
 var (
+	waitShort              = func() { time.Sleep(100 * time.Millisecond) }
+	waitLong               = func() { time.Sleep(1500 * time.Millisecond) }
 	testKubeFedNS          = "kube-federation-system"
 	federatedDeploymentGVR = schema.GroupVersionResource{
 		Group:    "types.kubefed.io",
@@ -171,7 +173,7 @@ var _ = Describe("WAOFedConfig controller", func() {
 			_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Create(ctx, fns, metav1.CreateOptions{})
 			Expect(err).NotTo(HaveOccurred())
 		}
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 			Scheme: scheme.Scheme,
@@ -196,7 +198,7 @@ var _ = Describe("WAOFedConfig controller", func() {
 				panic(err)
 			}
 		}()
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 	})
 
 	AfterEach(func() {
@@ -212,15 +214,15 @@ var _ = Describe("WAOFedConfig controller", func() {
 			err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Delete(ctx, fdeploy.GetName(), metav1.DeleteOptions{})
 			Expect(err).NotTo(HaveOccurred())
 		}
-		time.Sleep(1000 * time.Millisecond)
+		waitLong()
 
 		// delete all WAOFedConfig
 		err = k8sClient.DeleteAllOf(ctx, &v1beta1.WAOFedConfig{}, client.InNamespace("")) // cluster-scoped
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		cncl() // stop the mgr
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 	})
 
 	It("should create, re-create and delete RSP", func() {
@@ -232,32 +234,32 @@ var _ = Describe("WAOFedConfig controller", func() {
 		// create WAOFedConfig
 		err := k8sClient.Create(ctx, &wfc)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// create FederatedDeployment
 		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// confirm RSP is also created
 		rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
 		err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// confirm RSP re-create
 		err = k8sClient.Delete(ctx, rsp)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 		err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
 		Expect(err).NotTo(HaveOccurred())
 
 		// delete FederatedDeployment
 		err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Delete(ctx, fdeploy.GetName(), metav1.DeleteOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(1 * time.Second)
+		waitLong()
 
 		// confirm RSP is also deleted
 		fmt.Printf("confirm RSP is deleted %s/%s", fdeploy.GetNamespace(), fdeploy.GetName())
@@ -274,27 +276,27 @@ var _ = Describe("WAOFedConfig controller", func() {
 		// create WAOFedConfig
 		err := k8sClient.Create(ctx, &wfc)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// create FederatedDeployment
 		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// confirm RSP is also created
 		rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
 		err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// delete annotation from FederatedDeployment
 		annotationInPatchFormat := strings.ReplaceAll(wfc.Spec.Scheduling.Selector.HasAnnotation, "/", "~1")
 		patch := []byte(`[{"op": "remove", "path": "/metadata/annotations/` + annotationInPatchFormat + `"}]`)
 		fdeploy, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Patch(ctx, fdeploy.GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// confirm RSP is deleted
 		err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
@@ -310,14 +312,14 @@ var _ = Describe("WAOFedConfig controller", func() {
 		// create WAOFedConfig
 		err := k8sClient.Create(ctx, &wfc)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// create FederatedDeployment
 		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy2.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// confirm RSP is NOT created
 		rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
@@ -334,20 +336,20 @@ var _ = Describe("WAOFedConfig controller", func() {
 		// create WAOFedConfig
 		err := k8sClient.Create(ctx, &wfc)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// create FederatedDeployment
 		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy2.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		// confirm RSP is also created
 		rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
 		err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 	})
 })
 
