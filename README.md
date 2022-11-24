@@ -15,9 +15,12 @@
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Deploy a `WAOFedConfig` resource](#deploy-a-waofedconfig-resource)
+  - [Scheduling settings (RSPOptimizer)](#scheduling-settings-rspoptimizer)
   - [Deploy `FederatedDeployment` resources](#deploy-federateddeployment-resources)
+  - [Load balancing settings](#load-balancing-settings)
   - [Uninstallation](#uninstallation)
 - [Developing](#developing)
+- [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -25,7 +28,10 @@
 // TODO(user): An in-depth paragraph about your project and overview of use
 
 ## Getting Started
-// TODO: prerequisites
+
+Supported Kubernetes versions: __1.19 or higher__
+
+> 💡 Mainly tested with 1.25, may work with the same versions that [KubeFed supports](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#create-clusters) (but may require some efforts).
 
 ### Installation
 
@@ -42,10 +48,140 @@ kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0/
 ```
 
 ### Deploy a `WAOFedConfig` resource
-// TODO
+
+`WAOFedConfig` is a resource for configuring WAOFed. Deploy it with the name `default` to the cluster where KubeFed control plane is deployed.
+
+`spec.kubefedNamespace` specifies the namespace from which WAOFed gets member clusters.
+
+```yaml
+apiVersion: waofed.bitmedia.co.jp/v1beta1
+kind: WAOFedConfig
+metadata:
+  name: default # must be default
+spec:
+  kubefedNamespace: "kube-federation-system"
+  scheduling:
+    selector:
+      hasAnnotation: waofed.bitmedia.co.jp/scheduling
+    optimizer:
+      method: "rr" # "wao" is not yet implemented
+```
+
+### Scheduling settings (RSPOptimizer)
+
+RSPOptimizer watches the creation of `FederatedDeployment` resources and generates `ReplicaSchedulingPreference` resources with optimized workload allocation by the specified method.
+
+Supported methods: `rr` (Round-robin, for testing purposes)
+
+`spec.scheduling.selector` specifies the conditions for the `FederatedDeployment` resources that KubeFed watches.
+
+> 💡 You can enable RSPOptimizer by default by setting `spec.scheduling.selector.any` to true.
+>
+> ```diff
+>    scheduling:
+>      selector:
+> -      hasAnnotation: waofed.bitmedia.co.jp/> scheduling
+> +      any: true
+> ```
 
 ### Deploy `FederatedDeployment` resources
-// TODO
+
+> 💡 Ensure the namespace is federated by a `FederatedNamespace` resource before deploying `FederatedDeployment` resources.
+> 
+> ```yaml
+> apiVersion: types.kubefed.io/v1beta1
+> kind: FederatedNamespace
+> metadata:
+>   name: default
+>   namespace: default
+> spec:
+>   placement:
+>     clusterSelector: {}
+> ```
+
+Just deploy the `FederatedDeployment` with the annotation specified in WAOFedConfig, RSPOptimizer will detect the resource and generate an `ReplicaSchedulingPreference`.
+
+```yaml
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  name: fdeploy-sample
+  namespace: default
+  annotations:
+    waofed.bitmedia.co.jp/scheduling: ""
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      replicas: 9
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+        spec:
+          containers:
+            - image: nginx:1.23.2
+              name: nginx
+  placement:
+    clusterSelector: {}
+```
+
+You can check the resources with the following commands.
+
+```sh
+$ kubectl get fdeploy
+NAME             AGE
+fdeploy-sample   12s
+
+$ kubectl get rsp
+NAME             AGE
+fdeploy-sample   12s
+```
+
+
+You can see the details by using `kubectl` with `-oyaml`.
+
+The generated `ReplicaSchedulingPreference` has an owner reference indicating that it is controlled by the `FederatedDeployment` so that it will be deleted by GC when the `FederatedDeployment` is deleted.
+
+`spec.clusters` is optimized by the method specified in `WAOFedConfig`. This sample uses `rr` so all available clusters have a weight of 1.
+
+```yaml
+apiVersion: scheduling.kubefed.io/v1alpha1
+kind: ReplicaSchedulingPreference
+metadata:
+  name: fdeploy-sample
+  namespace: default
+  ownerReferences:
+  - apiVersion: types.kubefed.io/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: FederatedDeployment
+    name: fdeploy-sample
+    ...
+spec:
+  clusters:
+    cluster1:
+      weight: 1
+    cluster2:
+      weight: 1
+    cluster3:
+      weight: 1
+  intersectWithClusterSelector: false
+  rebalance: true
+  targetKind: FederatedDeployment
+  totalReplicas: 9
+...
+```
+
+### Load balancing settings
+
+// TODO: not yet implemented
+
 
 ### Uninstallation
 
@@ -66,3 +202,7 @@ NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following c
 ./hack/dev-kind-reset-clusters.sh
 ./hack/dev-kind-deploy.sh
 ```
+
+## License
+
+TODO: add a license
