@@ -35,15 +35,12 @@ func Test_convertToStructuredFederatedDeployment(t *testing.T) {
 					Name:      "fdeploy-sample",
 					Namespace: "default",
 				},
-				Spec: struct {
-					Template  appsv1.Deployment           `json:"template,omitempty"`
-					Placement util.GenericPlacementFields `json:"placement,omitempty"`
-				}{
-					Placement: util.GenericPlacementFields{
+				Spec: &structuredFederatedDeploymentSpec{
+					Placement: &util.GenericPlacementFields{
 						Clusters: []util.GenericClusterReference{
 							{Name: "kind-waofed-1"}, {Name: "kind-waofed-2"}, {Name: "kind-waofed-3"}},
 					},
-					Template: appsv1.Deployment{
+					Template: &appsv1.Deployment{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "",
 							Namespace: "",

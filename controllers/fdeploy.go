@@ -33,14 +33,17 @@ func newUnstructuredFederatedDeployment() *unstructured.Unstructured {
 type structuredFederatedDeployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              struct {
-		Template  appsv1.Deployment                  `json:"template,omitempty"`
-		Placement fedctrlutil.GenericPlacementFields `json:"placement,omitempty"`
-	} `json:"spec,omitempty"`
+	Spec              *structuredFederatedDeploymentSpec `json:"spec,omitempty"`
+}
+
+type structuredFederatedDeploymentSpec struct {
+	Template  *appsv1.Deployment                  `json:"template,omitempty"`
+	Placement *fedctrlutil.GenericPlacementFields `json:"placement,omitempty"`
 }
 
 func convertToStructuredFederatedDeployment(in *unstructured.Unstructured) (*structuredFederatedDeployment, error) {
 	var out structuredFederatedDeployment
+	out.Spec = &structuredFederatedDeploymentSpec{}
 
 	if in.GroupVersionKind() != federatedDeploymentGVK {
 		return nil, fmt.Errorf("wrong GVK: %v", in.GroupVersionKind())
@@ -69,13 +72,13 @@ func convertToStructuredFederatedDeployment(in *unstructured.Unstructured) (*str
 	if err != nil {
 		return nil, err
 	}
-	out.Spec.Placement = *objPlacement
+	out.Spec.Placement = objPlacement
 
 	objDeployment, err := convertUnstructuredFieldToObject[*appsv1.Deployment]("template", spec)
 	if err != nil {
 		return nil, err
 	}
-	out.Spec.Template = *objDeployment
+	out.Spec.Template = objDeployment
 
 	return &out, nil
 }
