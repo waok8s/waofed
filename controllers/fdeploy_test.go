@@ -68,6 +68,66 @@ func Test_convertToStructuredFederatedDeployment(t *testing.T) {
 			},
 			false,
 		},
+		{"no_placement",
+			args{&unstructured.Unstructured{Object: helperLoadJSON(t, "testdata/unstructuredFederatedDeploymentObject_no_placement.json")}},
+			&structuredFederatedDeployment{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       federatedDeploymentGVK.Kind,
+					APIVersion: federatedDeploymentGVK.GroupVersion().Identifier(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "fdeploy-sample",
+					Namespace: "default",
+				},
+				Spec: &structuredFederatedDeploymentSpec{
+					Template: &appsv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "",
+							Namespace: "",
+						},
+						Spec: appsv1.DeploymentSpec{
+							Replicas: pointer.Int32(9),
+							Selector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"": "",
+								},
+							},
+							Template: corev1.PodTemplateSpec{
+								Spec: corev1.PodSpec{
+									Containers: []corev1.Container{
+										{
+											Name:  "nginx",
+											Image: "nginx:1.23.2",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{"no_template",
+			args{&unstructured.Unstructured{Object: helperLoadJSON(t, "testdata/unstructuredFederatedDeploymentObject.json")}},
+			&structuredFederatedDeployment{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       federatedDeploymentGVK.Kind,
+					APIVersion: federatedDeploymentGVK.GroupVersion().Identifier(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "fdeploy-sample",
+					Namespace: "default",
+				},
+				Spec: &structuredFederatedDeploymentSpec{
+					Placement: &util.GenericPlacementFields{
+						Clusters: []util.GenericClusterReference{
+							{Name: "kind-waofed-1"}, {Name: "kind-waofed-2"}, {Name: "kind-waofed-3"}},
+					},
+				},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -94,8 +154,10 @@ func Test_convertToStructuredFederatedDeployment(t *testing.T) {
 			// placement
 			compare("Clusters", got.Spec.Placement, tt.want.Spec.Placement)
 			// template
-			compare("Replicas", got.Spec.Template.Spec.Replicas, tt.want.Spec.Template.Spec.Replicas)
-			compare("Containers[0].Name", got.Spec.Template.Spec.Template.Spec.Containers[0].Name, tt.want.Spec.Template.Spec.Template.Spec.Containers[0].Name)
+			if tt.want.Spec.Template != nil {
+				compare("Replicas", got.Spec.Template.Spec.Replicas, tt.want.Spec.Template.Spec.Replicas)
+				compare("Containers[0].Name", got.Spec.Template.Spec.Template.Spec.Containers[0].Name, tt.want.Spec.Template.Spec.Template.Spec.Containers[0].Name)
+			}
 			if !ok {
 				t.Error("convertToStructuredFederatedDeployment()")
 			}

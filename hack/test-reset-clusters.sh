@@ -12,14 +12,20 @@ KUBEFED_VER=$KUBEFEDCTL_VERSION
 # main
 
 cluster0=$PROJECT_NAME-test-0
+cluster1=$PROJECT_NAME-test-1
 
 lib::start-docker
 
 lib::create-cluster "$cluster0" "$KIND_IMAGE"
+lib::create-cluster "$cluster1" "$KIND_IMAGE"
 
 lib::setup-kubefed "$cluster0" "$KUBEFED_VER"
 lib::join-kubefed "$cluster0" "$cluster0"
+lib::join-kubefed "$cluster1" "$cluster0"
 
 sleep 15
 
 "$KUBECTL" get kubefedclusters -n kube-federation-system
+
+"$KUBECTL" label -n kube-federation-system kfc kind-"$cluster0" mylabel=xxx
+"$KUBECTL" label -n kube-federation-system kfc kind-"$cluster1" mylabel=yyy

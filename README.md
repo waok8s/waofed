@@ -131,24 +131,21 @@ spec:
     clusterSelector: {}
 ```
 
-You can check the resources with the following commands.
 
-```sh
-$ kubectl get fdeploy
-NAME             AGE
-fdeploy-sample   12s
-
-$ kubectl get rsp
-NAME             AGE
-fdeploy-sample   12s
-```
-
-
-You can see the details by using `kubectl` with `-oyaml`.
+> 💡 You can see the resources with the following commands, and see the details by adding `-oyaml`.
+> ```sh
+> $ kubectl get fdeploy
+> NAME             AGE
+> fdeploy-sample   12s
+> 
+> $ kubectl get rsp
+> NAME             AGE
+> fdeploy-sample   12s
+> ```
 
 The generated `ReplicaSchedulingPreference` has an owner reference indicating that it is controlled by the `FederatedDeployment` so that it will be deleted by GC when the `FederatedDeployment` is deleted.
 
-`spec.clusters` is optimized by the method specified in `WAOFedConfig`. This sample uses `rr` so all available clusters have a weight of 1.
+`spec.clusters` includes clusters specified in `spec.placement` (`FederatedDeployment`), and weights are optimized by the method specified in `WAOFedConfig`. This sample uses `rr` so all available clusters have a weight of 1.
 
 ```yaml
 apiVersion: scheduling.kubefed.io/v1alpha1
@@ -171,12 +168,29 @@ spec:
       weight: 1
     cluster3:
       weight: 1
-  intersectWithClusterSelector: false
+  intersectWithClusterSelector: true
   rebalance: true
   targetKind: FederatedDeployment
   totalReplicas: 9
 ...
 ```
+
+> 💡 Since `spec.intersectWithClusterSelector` is set to `true`, the generated `ReplicaSchedulingPreference` does not override the setting of the `FederatedDeployment`, allowing RSPOptimizer to watch the `FederatedDeployment`.
+
+
+> ⚠️ **Edge cases not covered:**
+>
+> **`placement.clusters` has 0 items**
+>
+> KubeFed ignores `spec.placement.clusterSelector` if `spec.placement.clusters` is provided, so no clusters will be selected for the following case ([docs](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#both-specplacementclusters-and-specplacementclusterselector-are-provided)). However, RSPOptimizer currently does not recognize whether a list is nil (`null`) or has 0 items (`[]`), so it regards `spec.placement.clusters` as "not provided" and uses `spec.placement.clusterSelector` for scheduling.
+> ```yaml
+> spec:
+>   placement:
+>     clusters: []
+>     clusterSelector:
+>       matchExpressions:
+>         - { key: mylabel, operator: Exists }
+> ```
 
 ### Load balancing settings
 

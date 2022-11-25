@@ -1,10 +1,8 @@
 apiVersion: types.kubefed.io/v1beta1
 kind: FederatedDeployment
 metadata:
-  name: fdeploy-sample
+  name: fdeploy-sample7
   namespace: default
-  annotations:
-    waofed.bitmedia.co.jp/scheduling: ""
 spec:
   template:
     metadata:
@@ -29,3 +27,13 @@ spec:
   placement:
     clusters:
       - name: kind-waofed-test-0
+      - name: kind-waofed-test-0
+      - name: kind-waofed-test-0
+      - name: kind-waofed-test-1
+      - name: kind-waofed-test-1
+      - name: kind-waofed-test-1
+      - name: kind-waofed-test-222222222
+      - name: kind-waofed-test-333333333
+      - name: kind-waofed-test-444444444
+      - name: kind-waofed-test-444444444
+      - name: kind-waofed-test-444444444

@@ -1,8 +1,10 @@
 apiVersion: types.kubefed.io/v1beta1
 kind: FederatedDeployment
 metadata:
-  name: fdeploy-sample2
+  name: fdeploy-sample
   namespace: default
+  annotations:
+    waofed.bitmedia.co.jp/scheduling: ""
 spec:
   template:
     metadata:

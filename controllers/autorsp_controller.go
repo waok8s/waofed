@@ -66,6 +66,7 @@ func (r *RSPOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	fdeploy, err := convertToStructuredFederatedDeployment(fdep)
 	if err != nil {
 		lg.Error(err, "unable to convert FederatedDeployment")
+		return ctrl.Result{}, err
 	}
 
 	// reconcile RSP
@@ -152,7 +153,7 @@ func (r *RSPOptimizerReconciler) reconcileRSP(
 				TargetKind:                   fdeploy.Kind,
 				TotalReplicas:                *fdeploy.Spec.Template.Spec.Replicas,
 				Rebalance:                    true,
-				IntersectWithClusterSelector: false,
+				IntersectWithClusterSelector: true,
 				Clusters:                     nil,
 			}
 			// set RSP clusters
@@ -189,9 +190,9 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	ctx context.Context, fdeploy *structuredFederatedDeployment, wfc *v1beta1.WAOFedConfig,
 ) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	lg := log.FromContext(ctx)
-	lg.Info("optimizeClusterWeights")
+	lg.Info("optimizeClusterWeights", "wfc", wfc, "fdeploy", fdeploy)
 
-	// get cluster clusters
+	// get clusters
 	//   if has placement.clusters field, the specified clusters should be candidates
 	//   if only has placement.clusterSelector field, the selected clusters should be candidates
 	//   if no placement field, no (or all) clusters should be candidates (consider making it configurable)
@@ -203,13 +204,13 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	var candidates []string
 	if fdeploy.Spec.Placement.Clusters != nil {
 		// placement.clusters is specified
-		lg.Info("placement.clusters found")
+		lg.Info("placement.clusters found", "fdeploy", fdeploy.Spec.Placement.Clusters)
 		for _, c := range fdeploy.Spec.Placement.Clusters {
 			candidates = append(candidates, c.Name)
 		}
 	} else { // fdeploy.Spec.Placement.ClusterSelector != nil
 		// placement.clusterSelector is specified
-		lg.Info("placement.clusterSelector found")
+		lg.Info("placement.clusterSelector found", "spec.placement.clusterSelector", fdeploy.Spec.Placement.ClusterSelector)
 		sel, err := metav1.LabelSelectorAsSelector(fdeploy.Spec.Placement.ClusterSelector)
 		if err != nil {
 			lg.Error(err, "placement.clusterSelector")
@@ -227,14 +228,45 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 		}
 	}
 
-	lg.Info("candidate clusters", "clusters", candidates)
+	// filter candidates
+	// remove invalid or duplicated clusters
+	// NOTE: FederatedDeployment spec.placement does not guarantee its validity
+	var clusters []string
+
+	// NOTE: all KubeFedClusters are considered valid, only unregistered clusters will be removed
+	cl := &fedcorev1b1.KubeFedClusterList{}
+	if err := r.List(ctx, cl, &client.ListOptions{
+		Namespace: wfc.Spec.KubeFedNamespace,
+	}); err != nil {
+		return nil, err
+	}
+	registered := map[string]struct{}{}
+	for _, c := range cl.Items {
+		registered[c.Name] = struct{}{}
+	}
+
+	dedup := map[string]int{}
+
+	for _, c := range candidates {
+		// check registration
+		if _, ok := registered[c]; !ok {
+			continue
+		}
+		// deduplication
+		dedup[c] += 1
+		if dedup[c] == 1 {
+			clusters = append(clusters, c)
+		}
+	}
+
+	lg.Info("schedulable clusters", "clusters", clusters)
 
 	// optimize cluster weights
 	optimizeFn, ok := optimizeFuncCollection[wfc.Spec.Scheduling.Optimizer.Method]
 	if !ok {
 		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
 	}
-	cps, err := optimizeFn(candidates)
+	cps, err := optimizeFn(clusters)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 apiVersion: types.kubefed.io/v1beta1
 kind: FederatedDeployment
 metadata:
-  name: fdeploy-sample2
+  name: fdeploy-sample5
   namespace: default
 spec:
   template:
@@ -25,4 +25,5 @@ spec:
         #       ports:
         #         - containerPort: 80
   placement:
-    clusterSelector: {}
+    clusters:
+      - name: kind-waofed-test-1

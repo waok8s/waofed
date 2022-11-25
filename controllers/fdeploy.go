@@ -69,16 +69,14 @@ func convertToStructuredFederatedDeployment(in *unstructured.Unstructured) (*str
 	}
 
 	objPlacement, err := convertUnstructuredFieldToObject[*fedctrlutil.GenericPlacementFields]("placement", spec)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		out.Spec.Placement = objPlacement
 	}
-	out.Spec.Placement = objPlacement
 
 	objDeployment, err := convertUnstructuredFieldToObject[*appsv1.Deployment]("template", spec)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		out.Spec.Template = objDeployment
 	}
-	out.Spec.Template = objDeployment
 
 	return &out, nil
 }

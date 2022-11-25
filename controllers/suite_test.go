@@ -61,7 +61,7 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
-		UseExistingCluster:    pointer.Bool(true), // run `./hack/dev-reset-clusters.sh` before running `make test`
+		UseExistingCluster:    pointer.Bool(true),
 	}
 
 	var err error
@@ -237,7 +237,7 @@ var _ = Describe("WAOFedConfig controller", func() {
 		waitShort()
 
 		// create FederatedDeployment
-		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy.yaml"))
+		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy1.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
@@ -249,7 +249,7 @@ var _ = Describe("WAOFedConfig controller", func() {
 		Expect(err).NotTo(HaveOccurred())
 		waitShort()
 
-		// confirm RSP re-create
+		// delete the RSP and confirm the re-creation
 		err = k8sClient.Delete(ctx, rsp)
 		Expect(err).NotTo(HaveOccurred())
 		waitShort()
@@ -279,7 +279,7 @@ var _ = Describe("WAOFedConfig controller", func() {
 		waitShort()
 
 		// create FederatedDeployment
-		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy.yaml"))
+		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy1.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
@@ -303,7 +303,7 @@ var _ = Describe("WAOFedConfig controller", func() {
 		Expect(err).To(HaveOccurred())
 	})
 
-	It("should not create RSP as no annotations", func() {
+	It("should not create RSP as no annotations specified in FederatedDeployment", func() {
 
 		wfc := testWFC1
 
@@ -351,7 +351,75 @@ var _ = Describe("WAOFedConfig controller", func() {
 		Expect(err).NotTo(HaveOccurred())
 		waitShort()
 	})
+
+	Context("schedule on clusters", func() {
+		It("should be scheduled on cluster0", func() {
+			want := []string{"kind-waofed-test-0"}
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy3.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy4.yaml"), want)
+			_ = want
+		})
+		It("should be scheduled on cluster1", func() {
+			want := []string{"kind-waofed-test-1"}
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy5.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy6.yaml"), want)
+			_ = want
+		})
+		It("should be scheduled on cluster0 and cluster1", func() {
+			want := []string{"kind-waofed-test-0", "kind-waofed-test-1"}
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy7.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy8.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy9.yaml"), want)
+			_ = want
+		})
+		It("should not be scheduled on any cluster", func() {
+			want := []string{}
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy10.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy11.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy12.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy13.yaml"), want)
+			// NOTE: uncovered edge case, see readme for details
+			// testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy14.yaml"), want)
+			_ = want
+		})
+	})
 })
+
+func testRSP(wfc v1beta1.WAOFedConfig, fdeployNS, fdeployFile string, shouldBeScheduledOn []string) {
+	ctx := context.Background()
+
+	// create WAOFedConfig if not exists
+	if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(&wfc), &wfc); errors.IsNotFound(err) {
+		err := k8sClient.Create(ctx, &wfc)
+		Expect(err).NotTo(HaveOccurred())
+		waitShort()
+	}
+
+	// create FederatedDeployment
+	fdeploy, _, _, err := helperLoadYAML(fdeployFile)
+	Expect(err).NotTo(HaveOccurred())
+	_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeployNS).Create(ctx, fdeploy, metav1.CreateOptions{})
+	Expect(err).NotTo(HaveOccurred())
+	waitShort()
+
+	// confirm RSP is also created
+	rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
+	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
+	Expect(err).NotTo(HaveOccurred())
+	waitShort()
+
+	// check RSP
+	check := map[string]int{}
+	for _, c := range shouldBeScheduledOn {
+		check[c] += 1
+	}
+	for k := range rsp.Spec.Clusters {
+		check[k] += 1
+	}
+	for k, v := range check {
+		Expect(v).Should(Equal(2), "err on %s, want: %#v, got: %#v", k, shouldBeScheduledOn, rsp.Spec.Clusters)
+	}
+}
 
 func helperLoadYAML(name string) (*unstructured.Unstructured, runtime.Object, *schema.GroupVersionKind, error) {
 	f, err := os.Open(name)
