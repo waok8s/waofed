@@ -1,6 +1,6 @@
 # waofed
 
-![GitHub](https://img.shields.io/github/license/Nedopro2022/waofed)
+[![GitHub](https://img.shields.io/github/license/Nedopro2022/waofed)](https://github.com/Nedopro2022/waofed/blob/main/LICENSE)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/Nedopro2022/waofed)](https://github.com/Nedopro2022/waofed/releases/latest)
 [![CI](https://github.com/Nedopro2022/waofed/actions/workflows/ci.yaml/badge.svg)](https://github.com/Nedopro2022/waofed/actions/workflows/ci.yaml)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Nedopro2022/waofed)
@@ -80,7 +80,7 @@ Supported methods: `rr` (Round-robin, for testing purposes)
 > ```diff
 >    scheduling:
 >      selector:
-> -      hasAnnotation: waofed.bitmedia.co.jp/> scheduling
+> -      hasAnnotation: waofed.bitmedia.co.jp/scheduling
 > +      any: true
 > ```
 
