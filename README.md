@@ -5,8 +5,9 @@
 [![CI](https://github.com/Nedopro2022/waofed/actions/workflows/ci.yaml/badge.svg)](https://github.com/Nedopro2022/waofed/actions/workflows/ci.yaml)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Nedopro2022/waofed)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Nedopro2022/waofed)](https://goreportcard.com/report/github.com/Nedopro2022/waofed)
+[![codecov](https://codecov.io/gh/Nedopro2022/waofed/branch/main/graph/badge.svg)](https://codecov.io/gh/Nedopro2022/waofed)
 
-// TODO(user): Add simple overview of use/purpose
+Optimizes workload allocation on KubeFed.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -25,7 +26,11 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Overview
-// TODO(user): An in-depth paragraph about your project and overview of use
+
+WAOFed optimizes workload allocation on [KubeFed](https://github.com/kubernetes-sigs/kubefed) with the following components:
+
+- **RSPOptimizer**: Optimizes `FederatedDeployment` [weights](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#distribute-total-replicas-in-weighted-proportions) across clusters by generating [`ReplicaSchedulingPreference`](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#replicaschedulingpreference) using customizable methods.
+- // TODO: load balancer
 
 ## Getting Started
 
