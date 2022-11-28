@@ -1,6 +1,6 @@
 // Package controllers provides controllers
 //
-// Note: structuredFederatedDeployment has metav1.TypeMeta field,
+// NOTE: structuredFederatedDeployment has metav1.TypeMeta field,
 // which cause Kubebuilder to see it as an API and try to generate a CRD manifest,
 // but actually it is not an API, so set kubebuilder:skip to avoid this behavior.
 // +kubebuilder:skip

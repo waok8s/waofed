@@ -84,10 +84,10 @@ func (r *RSPOptimizerReconciler) reconcileRSP(
 	lg.Info("reconcileRSP")
 
 	skip := true
-	if wfc.Spec.Scheduling.Selector.Any {
+	if *wfc.Spec.Scheduling.Selector.Any {
 		// check selector.any
 		skip = false
-	} else if _, ok := fdeploy.GetAnnotations()[wfc.Spec.Scheduling.Selector.HasAnnotation]; ok {
+	} else if _, ok := fdeploy.GetAnnotations()[*wfc.Spec.Scheduling.Selector.HasAnnotation]; ok {
 		// check RSPOptimizer annotation exists in the FederatedDeployment
 		// currently the value is ignored
 		skip = false
@@ -262,7 +262,7 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	lg.Info("schedulable clusters", "clusters", clusters)
 
 	// optimize cluster weights
-	optimizeFn, ok := optimizeFuncCollection[wfc.Spec.Scheduling.Optimizer.Method]
+	optimizeFn, ok := optimizeFuncCollection[*wfc.Spec.Scheduling.Optimizer.Method]
 	if !ok {
 		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
 	}
