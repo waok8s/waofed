@@ -16,11 +16,14 @@ Optimizes workload allocation on KubeFed.
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Deploy a `WAOFedConfig` resource](#deploy-a-waofedconfig-resource)
-  - [Scheduling settings (RSPOptimizer)](#scheduling-settings-rspoptimizer)
+    - [Scheduling settings (RSPOptimizer)](#scheduling-settings-rspoptimizer)
   - [Deploy `FederatedDeployment` resources](#deploy-federateddeployment-resources)
   - [Load balancing settings](#load-balancing-settings)
   - [Uninstallation](#uninstallation)
 - [Developing](#developing)
+  - [Prerequisites](#prerequisites)
+  - [Run development clusters with kind](#run-development-clusters-with-kind)
+  - [Run tests on kind clusters](#run-tests-on-kind-clusters)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -29,7 +32,7 @@ Optimizes workload allocation on KubeFed.
 
 WAOFed optimizes workload allocation on [KubeFed](https://github.com/kubernetes-sigs/kubefed) with the following components:
 
-- **RSPOptimizer**: Optimizes `FederatedDeployment` [weights](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#distribute-total-replicas-in-weighted-proportions) across clusters by generating [`ReplicaSchedulingPreference`](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#replicaschedulingpreference) using customizable methods.
+- **RSPOptimizer**: Optimizes `FederatedDeployment` [weights](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#distribute-total-replicas-in-weighted-proportions) across clusters by generating [`ReplicaSchedulingPreference`](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#replicaschedulingpreference) using the specified method.
 - // TODO: load balancer
 
 ## Getting Started
@@ -38,15 +41,20 @@ Supported Kubernetes versions: __1.19 or higher__
 
 > 💡 Mainly tested with 1.25, may work with the same versions that [KubeFed supports](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#create-clusters) (but may require some efforts).
 
+Supported KubeFed APIs:
+- `FederatedDeployment [types.kubefed.io/v1beta1]`
+- `ReplicaSchedulingPreference [scheduling.kubefed.io/v1alpha1]`
+- `KubeFedCluster [core.kubefed.io/v1beta1]`
+
 ### Installation
 
-Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is used to generate webhook certificates.
+Make sure you have [cert-manager](https://cert-manager.io/) deployed on the cluster where KubeFed control plane is deployed, as it is used to generate webhook certificates.
 
 ```sh
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 ```
 
-Install the controller with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
+Deploy the Operator with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
 kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0/waofed.yaml
@@ -72,9 +80,9 @@ spec:
       method: "rr" # "wao" is not yet implemented
 ```
 
-### Scheduling settings (RSPOptimizer)
+#### Scheduling settings (RSPOptimizer)
 
-RSPOptimizer watches the creation of `FederatedDeployment` resources and generates `ReplicaSchedulingPreference` resources with optimized workload allocation by the specified method.
+RSPOptimizer watches the creation of `FederatedDeployment` resources and generates `ReplicaSchedulingPreference` resources with optimized workload allocation determined by the specified method.
 
 Supported methods: `rr` (Round-robin, for testing purposes)
 
@@ -104,7 +112,7 @@ Supported methods: `rr` (Round-robin, for testing purposes)
 >     clusterSelector: {}
 > ```
 
-Just deploy the `FederatedDeployment` with the annotation specified in WAOFedConfig, RSPOptimizer will detect the resource and generate an `ReplicaSchedulingPreference`.
+When a `FederatedDeployment` with the annotation specified in WAOFedConfig is deployed, RSPOptimizer will detect the resource and generate an `ReplicaSchedulingPreference`.
 
 ```yaml
 apiVersion: types.kubefed.io/v1beta1
@@ -148,9 +156,9 @@ spec:
 > fdeploy-sample   12s
 > ```
 
-The generated `ReplicaSchedulingPreference` has an owner reference indicating that it is controlled by the `FederatedDeployment` so that it will be deleted by GC when the `FederatedDeployment` is deleted.
+The generated `ReplicaSchedulingPreference` has an owner reference indicating that it is controlled by the `FederatedDeployment` so that it will be deleted by [GC](https://kubernetes.io/docs/concepts/architecture/garbage-collection/) when the `FederatedDeployment` is deleted.
 
-`spec.clusters` includes clusters specified in `spec.placement` (`FederatedDeployment`), and weights are optimized by the method specified in `WAOFedConfig`. This sample uses `rr` so all available clusters have a weight of 1.
+`spec.clusters` includes all clusters specified in `FederatedDeployment` `spec.placement` (RSPOptimizer parses the selector and retrives clusters), and `spec.clusters[name].weight` is optimized by the method specified in `WAOFedConfig`. This sample uses `rr` so all clusters have a weight of 1.
 
 ```yaml
 apiVersion: scheduling.kubefed.io/v1alpha1
@@ -180,8 +188,7 @@ spec:
 ...
 ```
 
-> 💡 Since `spec.intersectWithClusterSelector` is set to `true`, the generated `ReplicaSchedulingPreference` does not override the setting of the `FederatedDeployment`, allowing RSPOptimizer to watch the `FederatedDeployment`.
-
+> 💡 Since `spec.intersectWithClusterSelector` is set to `true`, the generated `ReplicaSchedulingPreference` does not overwrite anything in the `FederatedDeployment`, allowing RSPOptimizer to watch the `FederatedDeployment` easily.
 
 > ⚠️ **Edge cases not covered:**
 >
@@ -214,12 +221,33 @@ kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0
 
 This Operator uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder), so we basically follow the Kubebuilder way. See the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html) for details.
 
+### Prerequisites
 
-NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following command, note that currently it is needed to re-create the clusters on every reboot.
+Make sure you have the following tools installed:
+
+- Git
+- Make
+- Go
+- Docker
+
+### Run development clusters with [kind](https://kind.sigs.k8s.io/)
+
+The script creates K8s clusters `kind-waofed-[0123]`, deploys KubeFed control plane on `kind-waofed-0` and let the remaining clusters join as member clusters.
 
 ```sh
 ./hack/dev-kind-reset-clusters.sh
 ./hack/dev-kind-deploy.sh
+```
+
+> ⚠️ NOTE: Currently it is needed to re-create the clusters on every reboot as the script does not set static IPs to Docker containers.
+
+### Run tests on kind clusters
+
+The script creates K8s clusters `kind-waofed-test-[01]`, deploys KubeFed control plane on `kind-waofed-test-0`, let all clusters join as member clusters and runs integration tests.
+
+```sh
+./test/rspoptimizer-reset-clusters.sh
+./test/rspoptimizer-run-tests.sh
 ```
 
 ## License
