@@ -57,7 +57,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 Deploy the Operator with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
-kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0/waofed.yaml
+kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.2.0/waofed.yaml
 ```
 
 ### Deploy a `WAOFedConfig` resource
@@ -214,7 +214,7 @@ spec:
 Delete the Operator and resources with the following command.
 
 ```sh
-kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.1.0/waofed.yaml
+kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.2.0/waofed.yaml
 ```
 
 ## Developing
