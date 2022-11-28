@@ -1,0 +1,76 @@
+{
+    "apiVersion": "types.kubefed.io/v1beta1",
+    "kind": "FederatedDeployment",
+    "spec": {
+        "placement": {
+            "clusters": [
+                {
+                    "name": "kind-waofed-1"
+                },
+                {
+                    "name": "kind-waofed-2"
+                },
+                {
+                    "name": "kind-waofed-3"
+                }
+            ]
+        },
+        "template": {
+            "metadata": {
+                "labels": {
+                    "app": "nginx"
+                }
+            },
+            "spec": {
+                "replicas": 9,
+                "selector": {
+                    "matchLabels": {
+                        "app": "nginx"
+                    }
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "app": "nginx"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "image": "nginx:1.23.2",
+                                "name": "nginx",
+                                "ports": [
+                                    {
+                                        "containerPort": 80
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "status": {
+        "clusters": [
+            {
+                "name": "kind-waofed-1"
+            },
+            {
+                "name": "kind-waofed-2"
+            },
+            {
+                "name": "kind-waofed-3"
+            }
+        ],
+        "conditions": [
+            {
+                "lastTransitionTime": "2022-11-18T08:49:31Z",
+                "lastUpdateTime": "2022-11-18T08:49:31Z",
+                "status": "True",
+                "type": "Propagation"
+            }
+        ],
+        "observedGeneration": 1
+    }
+}
