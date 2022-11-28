@@ -121,12 +121,12 @@ var (
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
 			Scheduling: &v1beta1.SchedulingSettings{
-				Selector: v1beta1.FederatedDeploymentSelector{
-					Any:           false,
-					HasAnnotation: v1beta1.DefaultRSPOptimizerAnnotation,
+				Selector: &v1beta1.FederatedDeploymentSelector{
+					Any:           pointer.Bool(false),
+					HasAnnotation: pointer.String(v1beta1.DefaultRSPOptimizerAnnotation),
 				},
-				Optimizer: v1beta1.RSPOptimizerSettings{
-					Method: v1beta1.RSPOptimizerMethodRoundRobin,
+				Optimizer: &v1beta1.RSPOptimizerSettings{
+					Method: (*v1beta1.RSPOptimizerMethod)(pointer.String(v1beta1.RSPOptimizerMethodRoundRobin)),
 				},
 			},
 			LoadBalancing: &v1beta1.LoadBalancingSettings{},
@@ -141,11 +141,11 @@ var (
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
 			Scheduling: &v1beta1.SchedulingSettings{
-				Selector: v1beta1.FederatedDeploymentSelector{
-					Any: true,
+				Selector: &v1beta1.FederatedDeploymentSelector{
+					Any: pointer.Bool(true),
 				},
-				Optimizer: v1beta1.RSPOptimizerSettings{
-					Method: v1beta1.RSPOptimizerMethodRoundRobin,
+				Optimizer: &v1beta1.RSPOptimizerSettings{
+					Method: (*v1beta1.RSPOptimizerMethod)(pointer.String(v1beta1.RSPOptimizerMethodRoundRobin)),
 				},
 			},
 			LoadBalancing: &v1beta1.LoadBalancingSettings{},
@@ -292,7 +292,7 @@ var _ = Describe("WAOFedConfig controller", func() {
 		waitShort()
 
 		// delete annotation from FederatedDeployment
-		annotationInPatchFormat := strings.ReplaceAll(wfc.Spec.Scheduling.Selector.HasAnnotation, "/", "~1")
+		annotationInPatchFormat := strings.ReplaceAll(*wfc.Spec.Scheduling.Selector.HasAnnotation, "/", "~1")
 		patch := []byte(`[{"op": "remove", "path": "/metadata/annotations/` + annotationInPatchFormat + `"}]`)
 		fdeploy, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Patch(ctx, fdeploy.GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
 		Expect(err).NotTo(HaveOccurred())

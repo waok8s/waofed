@@ -1,7 +1,10 @@
 package v1beta1
 
 import (
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -16,8 +19,6 @@ func (r *WAOFedConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 //+kubebuilder:webhook:path=/mutate-waofed-bitmedia-co-jp-v1beta1-waofedconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=create;update,versions=v1beta1,name=mwaofedconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &WAOFedConfig{}
@@ -25,12 +26,45 @@ var _ webhook.Defaulter = &WAOFedConfig{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *WAOFedConfig) Default() {
 	waofedconfiglog.Info("default", "name", r.Name)
-
-	// TODO(user): fill in your defaulting logic.
+	if r.Spec.Scheduling != nil {
+		r.defaultScheduling()
+	}
+	if r.Spec.LoadBalancing != nil {
+		r.defaultLoadbalancing()
+	}
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-waofed-bitmedia-co-jp-v1beta1-waofedconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=create;update,versions=v1beta1,name=vwaofedconfig.kb.io,admissionReviewVersions=v1
+func (r *WAOFedConfig) defaultScheduling() {
+	waofedconfiglog.Info("default spec.scheduling", "name", r.Name)
+
+	// selector
+	if r.Spec.Scheduling.Selector == nil {
+		r.Spec.Scheduling.Selector = &FederatedDeploymentSelector{}
+	}
+	if r.Spec.Scheduling.Selector.Any == nil {
+		r.Spec.Scheduling.Selector.Any = pointer.Bool(false)
+	}
+	if r.Spec.Scheduling.Selector.HasAnnotation == nil {
+		r.Spec.Scheduling.Selector.HasAnnotation = pointer.String(DefaultRSPOptimizerAnnotation)
+	}
+
+	// optimizer
+	if r.Spec.Scheduling.Optimizer == nil {
+		r.Spec.Scheduling.Optimizer = &RSPOptimizerSettings{}
+	}
+	if r.Spec.Scheduling.Optimizer.Method == nil {
+		r.Spec.Scheduling.Optimizer.Method = (*RSPOptimizerMethod)(pointer.String(RSPOptimizerMethodRoundRobin))
+	}
+
+}
+
+func (r *WAOFedConfig) defaultLoadbalancing() {
+	waofedconfiglog.Info("default spec.loadbalancing", "name", r.Name)
+
+	// TODO
+}
+
+//+kubebuilder:webhook:path=/validate-waofed-bitmedia-co-jp-v1beta1-waofedconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=create;update;delete,versions=v1beta1,name=vwaofedconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &WAOFedConfig{}
 
@@ -38,7 +72,10 @@ var _ webhook.Validator = &WAOFedConfig{}
 func (r *WAOFedConfig) ValidateCreate() error {
 	waofedconfiglog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if err := r.validateResource(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -46,7 +83,10 @@ func (r *WAOFedConfig) ValidateCreate() error {
 func (r *WAOFedConfig) ValidateUpdate(old runtime.Object) error {
 	waofedconfiglog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
+	if err := r.validateResource(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -54,6 +94,54 @@ func (r *WAOFedConfig) ValidateUpdate(old runtime.Object) error {
 func (r *WAOFedConfig) ValidateDelete() error {
 	waofedconfiglog.Info("validate delete", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object deletion.
+	// TODO: check whether any FederatedDeployment is using WAOFed
+
+	return nil
+}
+
+func (r *WAOFedConfig) validateResource() error {
+	if err := r.validateName(); err != nil {
+		return err
+	}
+	if err := r.validateKubeFedNS(); err != nil {
+		return err
+	}
+	if r.Spec.Scheduling != nil {
+		if err := r.validateScheduling(); err != nil {
+			return err
+		}
+	}
+	if r.Spec.LoadBalancing != nil {
+		if err := r.validateLoadbalancing(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *WAOFedConfig) validateName() error {
+	if r.Name != WAOFedConfigName {
+		return fmt.Errorf("name must be %s", WAOFedConfigName)
+	}
+	return nil
+}
+
+func (r *WAOFedConfig) validateKubeFedNS() error {
+	if r.Spec.KubeFedNamespace == "" {
+		return fmt.Errorf("kubefedNamespace must be set")
+	}
+	return nil
+}
+
+func (r *WAOFedConfig) validateScheduling() error {
+	// NOTE: the defaulting webhook ensures method != nil
+	if _, ok := rspOptimizerMethodCollection[*r.Spec.Scheduling.Optimizer.Method]; !ok {
+		return fmt.Errorf("invalid spec.scheduling.optimizer.method %s", *r.Spec.Scheduling.Optimizer.Method)
+	}
+	return nil
+}
+
+func (r *WAOFedConfig) validateLoadbalancing() error {
+	// TODO
 	return nil
 }

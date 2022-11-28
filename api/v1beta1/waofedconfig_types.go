@@ -20,27 +20,33 @@ const (
 	RSPOptimizerMethodWAO        = "wao"
 )
 
+var rspOptimizerMethodCollection = map[RSPOptimizerMethod]struct{}{
+	RSPOptimizerMethodRoundRobin: {},
+	RSPOptimizerMethodWAO:        {},
+}
+
 type RSPOptimizerSettings struct {
-	// Method specifies the method name to use.
-	Method RSPOptimizerMethod `json:"method,omitempty"`
+	// Method specifies the method name to use. (default: "rr")
+	// +optional
+	Method *RSPOptimizerMethod `json:"method,omitempty"`
 }
 
 type FederatedDeploymentSelector struct {
-	// Any matches any FederatedDeployment when set to true.
+	// Any matches any FederatedDeployment when set to true. (default: false)
 	// +optional
-	Any bool `json:"any,omitempty"`
-	// HasAnnotation specifies the annotation name within the FederatedDeployment to select.
+	Any *bool `json:"any,omitempty"`
+	// HasAnnotation specifies the annotation name within the FederatedDeployment to select. (default: "waofed.bitmedia.co.jp/scheduling")
 	// +optional
-	HasAnnotation string `json:"hasAnnotation,omitempty"`
+	HasAnnotation *string `json:"hasAnnotation,omitempty"`
 }
 
 type SchedulingSettings struct {
 	// Selector specifies the conditions that for FederatedDeployments to be affected by WAOFed.
 	// +optional
-	Selector FederatedDeploymentSelector `json:"selector,omitempty"`
+	Selector *FederatedDeploymentSelector `json:"selector,omitempty"`
 	// Optimizer owns optimizer settings that control how WAOFed generates ReplicaSchedulingPreferences.
 	// +optional
-	Optimizer RSPOptimizerSettings `json:"optimizer,omitempty"`
+	Optimizer *RSPOptimizerSettings `json:"optimizer,omitempty"`
 }
 
 type LoadBalancingSettings struct {

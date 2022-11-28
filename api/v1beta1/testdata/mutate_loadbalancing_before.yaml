@@ -1,0 +1,7 @@
+apiVersion: waofed.bitmedia.co.jp/v1beta1
+kind: WAOFedConfig
+metadata:
+  name: default
+spec:
+  kubefedNamespace: kube-federation-system
+  loadbalancing: {}
