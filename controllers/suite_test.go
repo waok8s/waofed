@@ -151,6 +151,18 @@ var (
 			LoadBalancing: &v1beta1.LoadBalancingSettings{},
 		},
 	}
+
+	testWFC3 = v1beta1.WAOFedConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "default",
+			Namespace: testNS,
+		},
+		Spec: v1beta1.WAOFedConfigSpec{
+			KubeFedNamespace: testKubeFedNS,
+			Scheduling:       nil,
+			LoadBalancing:    &v1beta1.LoadBalancingSettings{},
+		},
+	}
 )
 
 var _ = Describe("WAOFedConfig controller", func() {
@@ -223,6 +235,47 @@ var _ = Describe("WAOFedConfig controller", func() {
 
 		cncl() // stop the mgr
 		waitShort()
+	})
+
+	It("should not create RSP as no WAOFedConfig found", func() {
+
+		ctx := context.Background()
+
+		// create FederatedDeployment
+		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy2.yaml"))
+		Expect(err).NotTo(HaveOccurred())
+		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
+		Expect(err).NotTo(HaveOccurred())
+		waitShort()
+
+		// confirm RSP is NOT created
+		rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
+		err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("should not create RSP as WAOFedConfig has no scheduling config", func() {
+
+		wfc := testWFC3
+
+		ctx := context.Background()
+
+		// create WAOFedConfig
+		err := k8sClient.Create(ctx, &wfc)
+		Expect(err).NotTo(HaveOccurred())
+		waitShort()
+
+		// create FederatedDeployment
+		fdeploy, _, _, err := helperLoadYAML(filepath.Join("testdata", "fdeploy2.yaml"))
+		Expect(err).NotTo(HaveOccurred())
+		_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).Create(ctx, fdeploy, metav1.CreateOptions{})
+		Expect(err).NotTo(HaveOccurred())
+		waitShort()
+
+		// confirm RSP is NOT created
+		rsp := &fedschedv1a1.ReplicaSchedulingPreference{}
+		err = k8sClient.Get(ctx, client.ObjectKey{Namespace: fdeploy.GetNamespace(), Name: fdeploy.GetName()}, rsp)
+		Expect(err).To(HaveOccurred())
 	})
 
 	It("should create, re-create and delete RSP", func() {

@@ -47,14 +47,23 @@ func (r *RSPOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	// get WAOFedConfig
 	wfc := &v1beta1.WAOFedConfig{}
 	wfc.Name = v1beta1.WAOFedConfigName
-	if err := r.Get(ctx, client.ObjectKeyFromObject(wfc), wfc); err != nil {
+	err := r.Get(ctx, client.ObjectKeyFromObject(wfc), wfc)
+	if errors.IsNotFound(err) {
+		lg.Info("no WAOFedConfig found, drop the request")
+		return ctrl.Result{}, nil
+	}
+	if err != nil {
 		lg.Error(err, fmt.Sprintf("unable to get WAOFedConfig %s", client.ObjectKeyFromObject(wfc)))
 		return ctrl.Result{}, err
+	}
+	if wfc.Spec.Scheduling == nil {
+		lg.Info("WAOFedConfig spec.scheduling is nil, drop the request")
+		return ctrl.Result{}, nil
 	}
 
 	// get FederatedDeployment
 	fdep := newUnstructuredFederatedDeployment()
-	err := r.Get(ctx, req.NamespacedName, fdep)
+	err = r.Get(ctx, req.NamespacedName, fdep)
 	if errors.IsNotFound(err) {
 		lg.Info("FederatedDeployment is already deleted")
 		return ctrl.Result{}, nil
