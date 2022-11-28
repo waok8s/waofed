@@ -10,5 +10,5 @@ cluster0=$PROJECT_NAME-test-0
 "$KUBECTL" config use-context kind-"$cluster0"
 
 set +x
-make manifests generate fmt vet envtest
+make test
 KUBEBUILDER_ASSETS="$LOCALBIN"/k8s/1.25.0-linux-amd64 go test ./... -coverprofile cover.out -tags=testOnExistingCluster
