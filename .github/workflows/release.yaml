@@ -34,7 +34,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - run: REGISTRY=ghcr.io/${{ github.repository_owner }} ./hack/dist-manifests.sh
+      - run: REGISTRY=ghcr.io/${GITHUB_REPOSITORY_OWNER,,} ./hack/dist-manifests.sh
       - uses: softprops/action-gh-release@v1
         with:
           files: waofed.yaml
