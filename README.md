@@ -54,6 +54,8 @@ Make sure you have [cert-manager](https://cert-manager.io/) deployed on the clus
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 ```
 
+> ⚠️ You may have to wait a second for cert-manager to be ready.
+
 Deploy the Operator with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh

@@ -5,7 +5,4 @@ metadata:
   namespace: default
 spec:
   placement:
-    clusters:
-      - name: kind-waofed-1
-      - name: kind-waofed-2
-      - name: kind-waofed-3
+    clusterSelector: {}

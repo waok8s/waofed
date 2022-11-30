@@ -3,12 +3,12 @@ kind: WAOFedConfig
 metadata:
   name: default # must be default
 spec:
-  kubefedNamespace: "kube-federation-system"
+  kubefedNamespace: kube-federation-system
   scheduling:
     selector:
       # any: true # enable the optimizer by default
       hasAnnotation: waofed.bitmedia.co.jp/scheduling
     optimizer:
-      # method: "wao" # not yet implemented
-      method: "rr"
+      # method: wao # not yet implemented
+      method: rr
   # loadbalancing: null # not yet implemented
