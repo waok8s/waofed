@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 - 2022-11-30
+
+### Fixed
+
+- GitHub Actions now generate `waofed.yaml` with the correct image name.
+
 ## 0.2.0 - 2022-11-28
 
 ### Added
