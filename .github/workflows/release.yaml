@@ -14,7 +14,10 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/waofed-controller
           tags: |
-            type=semver,pattern=v{{version}}
+            # v1.2.3-rc.4
+            type=semver,pattern={{raw}}
+            # 1.2.3-rc.4
+            type=semver,pattern={{version}}
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
