@@ -58,10 +58,26 @@ spec:
                         type: string
                       waoEstimators:
                         additionalProperties:
-                          type: string
-                        description: "WAOEstimators specifies WAO-Estimator endpoints.
-                          Required when method \"wao\" is specified. \n e.g. {\"cluster1\":
-                          \"http://localhost:5657\", \"cluster2\": \"http://localhost:5658\"}"
+                          properties:
+                            endpoint:
+                              description: Endpoint specifies WAO-Estimator API endpoint.
+                                e.g. "http://localhost:5657"
+                              type: string
+                            name:
+                              description: 'Name specifies Estimator resource name.
+                                (default: "default")'
+                              type: string
+                            namespace:
+                              description: 'Namespace specifies Estimator resource
+                                namespace. (default: "default")'
+                              type: string
+                          required:
+                          - endpoint
+                          type: object
+                        description: "WAOEstimators specifies WAO-Estimator settings
+                          for member clusters. Required when method \"wao\" is specified.
+                          \n e.g. { cluster1: {endpoint: \"http://localhost:5657\"},
+                          cluster2: {endpoint: \"http://localhost:5658\"} }"
                         type: object
                     type: object
                   selector:

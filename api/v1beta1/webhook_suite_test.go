@@ -127,6 +127,7 @@ var _ = Describe("WAOFedConfig webhook", func() {
 			testMutate(mustOpen("testdata", "mutate_all_before.yaml"), mustOpen("testdata", "mutate_all_after.yaml"))
 			testMutate(mustOpen("testdata", "mutate_scheduling_before.yaml"), mustOpen("testdata", "mutate_scheduling_after.yaml"))
 			testMutate(mustOpen("testdata", "mutate_loadbalancing_before.yaml"), mustOpen("testdata", "mutate_loadbalancing_after.yaml"))
+			testMutate(mustOpen("testdata", "optimizer_wao", "mutate_before.yaml"), mustOpen("testdata", "optimizer_wao", "mutate_after.yaml"))
 		})
 	})
 	Context("validating", func() {

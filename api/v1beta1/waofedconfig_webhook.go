@@ -57,6 +57,20 @@ func (r *WAOFedConfig) defaultScheduling() {
 		r.Spec.Scheduling.Optimizer.Method = (*RSPOptimizerMethod)(pointer.String(RSPOptimizerMethodRoundRobin))
 	}
 
+	// optimizer specific settings
+	switch *r.Spec.Scheduling.Optimizer.Method {
+	case RSPOptimizerMethodRoundRobin:
+	case RSPOptimizerMethodWAO:
+		for _, v := range r.Spec.Scheduling.Optimizer.WAOEstimators {
+			if v.Namespace == "" {
+				v.Namespace = waoEstimatorDefaultNamespace
+			}
+			if v.Name == "" {
+				v.Name = waoEstimatorDefaultName
+			}
+		}
+	default:
+	}
 }
 
 func (r *WAOFedConfig) defaultLoadbalancing() {
@@ -146,7 +160,7 @@ func (r *WAOFedConfig) validateScheduling() error {
 			if k == "" {
 				return fmt.Errorf("spec.scheduling.optimizer.waoEstimators cannot use empty string as key")
 			}
-			if _, err := url.ParseRequestURI(v); err != nil {
+			if _, err := url.ParseRequestURI(v.Endpoint); err != nil {
 				return fmt.Errorf("spec.scheduling.optimizer.waoEstimators[k] is not a valid URL: %w", err)
 			}
 		}

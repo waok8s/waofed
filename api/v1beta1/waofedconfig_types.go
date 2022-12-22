@@ -11,6 +11,9 @@ const (
 
 	// WAOFedConfigName specifies the name of the only instance of WAOFedConfig that exists in the cluster.
 	WAOFedConfigName = "default"
+
+	waoEstimatorDefaultNamespace = "default"
+	waoEstimatorDefaultName      = "default"
 )
 
 type RSPOptimizerMethod string
@@ -25,13 +28,23 @@ type RSPOptimizerSettings struct {
 	// +optional
 	Method *RSPOptimizerMethod `json:"method,omitempty"`
 
-	// WAOEstimators specifies WAO-Estimator endpoints.
+	// WAOEstimators specifies WAO-Estimator settings for member clusters.
 	// Required when method "wao" is specified.
 	//
-	// e.g. {"cluster1": "http://localhost:5657", "cluster2": "http://localhost:5658"}
+	// e.g. { cluster1: {endpoint: "http://localhost:5657"}, cluster2: {endpoint: "http://localhost:5658"} }
 	//
 	// +optional
-	WAOEstimators map[string]string `json:"waoEstimators,omitempty"`
+	WAOEstimators map[string]*WAOEstimatorSetting `json:"waoEstimators,omitempty"`
+}
+
+type WAOEstimatorSetting struct {
+	// Endpoint specifies WAO-Estimator API endpoint.
+	// e.g. "http://localhost:5657"
+	Endpoint string `json:"endpoint"`
+	// Namespace specifies Estimator resource namespace. (default: "default")
+	Namespace string `json:"namespace,omitempty"`
+	// Name specifies Estimator resource name. (default: "default")
+	Name string `json:"name,omitempty"`
 }
 
 type FederatedDeploymentSelector struct {
