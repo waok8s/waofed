@@ -20,15 +20,18 @@ const (
 	RSPOptimizerMethodWAO        = "wao"
 )
 
-var rspOptimizerMethodCollection = map[RSPOptimizerMethod]struct{}{
-	RSPOptimizerMethodRoundRobin: {},
-	RSPOptimizerMethodWAO:        {},
-}
-
 type RSPOptimizerSettings struct {
 	// Method specifies the method name to use. (default: "rr")
 	// +optional
 	Method *RSPOptimizerMethod `json:"method,omitempty"`
+
+	// WAOEstimators specifies WAO-Estimator endpoints.
+	// Required when method "wao" is specified.
+	//
+	// e.g. {"cluster1": "http://localhost:5657", "cluster2": "http://localhost:5658"}
+	//
+	// +optional
+	WAOEstimators map[string]string `json:"waoEstimators,omitempty"`
 }
 
 type FederatedDeploymentSelector struct {

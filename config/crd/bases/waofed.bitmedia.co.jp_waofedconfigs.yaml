@@ -56,6 +56,13 @@ spec:
                         description: 'Method specifies the method name to use. (default:
                           "rr")'
                         type: string
+                      waoEstimators:
+                        additionalProperties:
+                          type: string
+                        description: "WAOEstimators specifies WAO-Estimator endpoints.
+                          Required when method \"wao\" is specified. \n e.g. {\"cluster1\":
+                          \"http://localhost:5657\", \"cluster2\": \"http://localhost:5658\"}"
+                        type: object
                     type: object
                   selector:
                     description: Selector specifies the conditions that for FederatedDeployments

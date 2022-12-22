@@ -133,6 +133,8 @@ var _ = Describe("WAOFedConfig webhook", func() {
 		It("should create resources", func() {
 			want := true
 			testValidate(mustOpen("testdata", "validate_all.yaml"), want)
+			testValidate(mustOpen("testdata", "optimizer_wao", "validate_1cluster.yaml"), want)
+			testValidate(mustOpen("testdata", "optimizer_wao", "validate_3clusters.yaml"), want)
 			_ = want
 		})
 		It("should not create resources", func() {
@@ -140,6 +142,10 @@ var _ = Describe("WAOFedConfig webhook", func() {
 			testValidate(mustOpen("testdata", "validate_invalid_name.yaml"), want)
 			testValidate(mustOpen("testdata", "validate_invalid_kubefedns.yaml"), want)
 			testValidate(mustOpen("testdata", "validate_invalid_optimizermethod.yaml"), want)
+			testValidate(mustOpen("testdata", "optimizer_wao", "validate_invalid_no_estimators.yaml"), want)
+			testValidate(mustOpen("testdata", "optimizer_wao", "validate_invalid_no_clusters.yaml"), want)
+			testValidate(mustOpen("testdata", "optimizer_wao", "validate_invalid_cluster_name.yaml"), want)
+			testValidate(mustOpen("testdata", "optimizer_wao", "validate_invalid_url.yaml"), want)
 			_ = want
 		})
 	})

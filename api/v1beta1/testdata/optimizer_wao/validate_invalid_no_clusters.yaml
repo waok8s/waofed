@@ -1,0 +1,14 @@
+apiVersion: waofed.bitmedia.co.jp/v1beta1
+kind: WAOFedConfig
+metadata:
+  name: default
+spec:
+  kubefedNamespace: kube-federation-system
+  scheduling:
+    selector:
+      any: false
+      hasAnnotation: waofed.bitmedia.co.jp/scheduling
+    optimizer:
+      method: wao
+      waoEstimators: {}
+  loadbalancing: {}
