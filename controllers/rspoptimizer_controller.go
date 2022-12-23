@@ -307,7 +307,6 @@ func optimizeFnRoundRobin(_ context.Context, clusters []string, _ *v1beta1.RSPOp
 }
 
 func optimizeFnWAO(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
-	// return optimizeFnRoundRobin(ctx, clusters, settings, fdeploy)
 	lg := log.FromContext(ctx)
 	lg.Info("optimizeFnWAO")
 
@@ -347,7 +346,7 @@ func optimizeFnWAO(ctx context.Context, clusters []string, settings *v1beta1.RSP
 				lg.Error(err, "estimator.NewClient", "cluster", cluster)
 			}
 			pc, apiErr, err := c.EstimatePowerConsumption(ctx, totalCPUMilli, replicas)
-			lg.Info(reqBuf.String())
+			lg.Info("call EstimatePowerConsumption", "cluster", cluster, "request", reqBuf.String())
 			if err != nil {
 				lg.Error(err, "EstimatePowerConsumption", "cluster", cluster)
 			} else if apiErr != nil {
@@ -360,10 +359,14 @@ func optimizeFnWAO(ctx context.Context, clusters []string, settings *v1beta1.RSP
 	}
 	wg.Wait()
 
-	_, minCostPatterns, err := estimator.ComputeLeastCostPatternsFn(len(clusters), replicas, estimatedCosts)
+	lg.Info("call ComputeLeastCostPatternsFn", "clusters", clusters, "costs", estimatedCosts)
+
+	minCost, minCostPatterns, err := estimator.ComputeLeastCostPatternsFn(len(clusters), replicas, estimatedCosts)
 	if err != nil {
 		return nil, err
 	}
+
+	lg.Info("called ComputeLeastCostPatternsFn", "minCost", minCost, "clusters", clusters, "minCostPatterns", minCostPatterns)
 
 	// NOTE: use the first pattern at this time
 	weights := minCostPatterns[0]

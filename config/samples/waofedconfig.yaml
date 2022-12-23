@@ -9,6 +9,11 @@ spec:
       # any: true # enable the optimizer by default
       hasAnnotation: waofed.bitmedia.co.jp/scheduling
     optimizer:
-      # method: wao # not yet implemented
       method: rr
+      # method: wao
+      # waoEstimators:
+      #   kind-waofed-0:
+      #     endpoint: http://localhost:5657
+      #   kind-waofed-1:
+      #     endpoint: http://localhost:5658
   # loadbalancing: null # not yet implemented

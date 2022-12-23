@@ -52,31 +52,19 @@ var _ = Describe("WAOFedConfig controller (RSPWAO)", func() {
 	AfterEach(afterEachFn)
 
 	Context("schedule on clusters (RSPWAO)", func() {
-		wantX := map[string]fedschedv1a1.ClusterPreferences{}
-		_ = wantX
-		want10 := map[string]fedschedv1a1.ClusterPreferences{
-			"kind-waofed-test-0": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
-			"kind-waofed-test-1": {MinReplicas: 0, MaxReplicas: nil, Weight: 0},
-		}
-		_ = want10
-		want01 := map[string]fedschedv1a1.ClusterPreferences{
-			"kind-waofed-test-0": {MinReplicas: 0, MaxReplicas: nil, Weight: 0},
-			"kind-waofed-test-1": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
-		}
-		_ = want01
-		want11 := map[string]fedschedv1a1.ClusterPreferences{
-			"kind-waofed-test-0": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
-			"kind-waofed-test-1": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
-		}
-		_ = want11
-		It("should be scheduled on cluster0", func() {
-		})
-		It("should be scheduled on cluster1", func() {
-			testRSP(testWFCRSPWAO1, testNS, filepath.Join("testdata", "rspwao", "fdeploy15.yaml"), want01)
-		})
-		It("should be scheduled on cluster0 and cluster1", func() {
-		})
-		It("should not be scheduled on any cluster", func() {
+		type cps map[string]fedschedv1a1.ClusterPreferences
+		const (
+			c1 = "kind-waofed-test-0"
+			c2 = "kind-waofed-test-1"
+		)
+		It("should be scheduled on", func() {
+			// NOTE: use the first pattern at this time
+			// [[0 1] [1 0]]
+			testRSP(testWFCRSPWAO1, testNS, filepath.Join("testdata", "rspwao", "fdeploy15.yaml"),
+				cps{c1: {Weight: 0}, c2: {Weight: 1}})
+			// [[0 9] [1 8] [2 7] [3 6] [4 5] [5 4] [6 3] [7 2] [8 1] [9 0]]
+			testRSP(testWFCRSPWAO1, testNS, filepath.Join("testdata", "rspwao", "fdeploy16.yaml"),
+				cps{c1: {Weight: 0}, c2: {Weight: 9}})
 		})
 	})
 })
