@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -45,7 +46,7 @@ func Test_optimizeFnRoundRobin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := optimizeFnRoundRobin(tt.args.clusters)
+			got, err := optimizeFnRoundRobin(context.Background(), tt.args.clusters, nil, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("optimizeFnRoundRobin() error = %v, wantErr %v", err, tt.wantErr)
 				return

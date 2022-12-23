@@ -8,10 +8,16 @@ SCRIPT=$(realpath "$0")
 PROJECT_ROOT=$(dirname "$(dirname "$SCRIPT")")
 PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
+# version
+
 KUBECTL_VERSION=v1.25.0
 KIND_VERSION=v0.17.0
 KUBEFEDCTL_VERSION=0.10.0 # without v
 HELM_VERSION=v3.10.2
+
+WAO_ESTIMATOR_VERSION=v0.1.0
+
+# bin
 
 LOCALBIN=$PROJECT_ROOT/bin # bin/
 
@@ -21,3 +27,5 @@ KUBECTL=$KUBECTL_DIR/kubectl # bin/kubectl-v1.25.0/kubectl
 KUBEFEDCTL=$LOCALBIN/kubefedctl # bin/kubefedctl
 HELM_DIR=$LOCALBIN/helm-$HELM_VERSION # bin/helm-v3.10.2
 HELM=$HELM_DIR/linux-amd64/helm # bin/helm-v3.10.2/linux-amd64/helm
+
+ESTIMATOR_CLI=$LOCALBIN/estimator-cli # bin/estimator-cli

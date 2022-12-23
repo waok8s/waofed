@@ -275,7 +275,7 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	if !ok {
 		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
 	}
-	cps, err := optimizeFn(clusters)
+	cps, err := optimizeFn(ctx, clusters, wfc.Spec.Scheduling.Optimizer, fdeploy)
 	if err != nil {
 		return nil, err
 	}
@@ -283,14 +283,14 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	return cps, nil
 }
 
-type optimizeFunc func(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error)
+type optimizeFunc func(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error)
 
 var optimizeFuncCollection = map[v1beta1.RSPOptimizerMethod]optimizeFunc{
 	v1beta1.RSPOptimizerMethodRoundRobin: optimizeFnRoundRobin,
 	v1beta1.RSPOptimizerMethodWAO:        optimizeFnWAO,
 }
 
-func optimizeFnRoundRobin(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error) {
+func optimizeFnRoundRobin(_ context.Context, clusters []string, _ *v1beta1.RSPOptimizerSettings, _ *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	cps := make(map[string]fedschedv1a1.ClusterPreferences, len(clusters))
 	for _, cl := range clusters {
 		cps[cl] = fedschedv1a1.ClusterPreferences{
@@ -302,7 +302,7 @@ func optimizeFnRoundRobin(clusters []string) (map[string]fedschedv1a1.ClusterPre
 	return cps, nil
 }
 
-func optimizeFnWAO(clusters []string) (map[string]fedschedv1a1.ClusterPreferences, error) {
+func optimizeFnWAO(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	cps := make(map[string]fedschedv1a1.ClusterPreferences, len(clusters))
 	// TODO
 	return cps, nil

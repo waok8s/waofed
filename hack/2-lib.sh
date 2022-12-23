@@ -9,6 +9,8 @@ CERT_MANAGER_YAML=${CERT_MANAGER_YAML:-"https://github.com/cert-manager/cert-man
 METRICS_SERVER_YAML=${METRICS_SERVER_YAML:-"https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml"}
 METRICS_SERVER_PATCH=${METRICS_SERVER_PATCH:-'''[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'''}
 
+WAO_ESTIMATOR_YAML=${WAO_ESTIMATOR_YAML:-"https://github.com/Nedopro2022/wao-estimator/releases/download/v0.1.0/wao-estimator.yaml"}
+
 # libs
 
 # Usage: lib::create-cluster <name> <kind_image>
@@ -77,4 +79,30 @@ function lib::start-docker {
     # https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
     sudo sysctl fs.inotify.max_user_watches=524288 || true
     sudo sysctl fs.inotify.max_user_instances=512 || true
+}
+
+# Usage: lib::install-wao-estimator <cluster_name>
+function lib::install-wao-estimator {
+    local cluster_name=kind-$1
+    test -s "$KUBECTL"
+    "$KUBECTL" apply --context "$cluster_name" -f "$WAO_ESTIMATOR_YAML"
+}
+
+# Usage: lib::start-wao-estimator <cluster_name> <estimator_yaml> <port>
+function lib::start-wao-estimator {
+    local cluster_name=kind-$1
+    local estimator_yaml=$2
+    local port=$3
+
+    test -s "$KUBECTL"
+    test -s "$estimator_yaml"
+    test -s "$ESTIMATOR_CLI"
+
+    "$KUBECTL" --context "$cluster_name" apply -f "$estimator_yaml"
+    "$KUBECTL" --context "$cluster_name" port-forward -n wao-estimator-system \
+        svc/wao-estimator-controller-manager-estimator-service "$port":5656 &
+    
+    sleep 1
+
+    "$ESTIMATOR_CLI" -v -a "http://localhost:${port}" pc
 }
