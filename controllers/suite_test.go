@@ -118,8 +118,7 @@ var (
 
 	testWFC1 = v1beta1.WAOFedConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "default",
-			Namespace: testNS,
+			Name: "default",
 		},
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
@@ -138,8 +137,7 @@ var (
 
 	testWFC2 = v1beta1.WAOFedConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "default",
-			Namespace: testNS,
+			Name: "default",
 		},
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
@@ -157,8 +155,7 @@ var (
 
 	testWFC3 = v1beta1.WAOFedConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "default",
-			Namespace: testNS,
+			Name: "default",
 		},
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
@@ -470,7 +467,7 @@ func testRSP(wfc v1beta1.WAOFedConfig, fdeployNS, fdeployFile string, want map[s
 		// both want == nil or want == map[string]fedschedv1a1.ClusterPreferences{} are ok
 		Expect(want == nil || cmp.Diff(want, map[string]fedschedv1a1.ClusterPreferences{}) == "").Should(BeTrue())
 	} else {
-		Expect(cmp.Diff(rsp.Spec.Clusters, want)).Should(BeEmpty())
+		Expect(cmp.Diff(want, rsp.Spec.Clusters)).Should(BeEmpty())
 	}
 }
 
