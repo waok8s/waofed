@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -401,39 +402,46 @@ var _ = Describe("WAOFedConfig controller", func() {
 	})
 
 	Context("schedule on clusters", func() {
+		wantX := map[string]fedschedv1a1.ClusterPreferences{}
+		_ = wantX
+		want0 := map[string]fedschedv1a1.ClusterPreferences{
+			"kind-waofed-test-0": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
+		}
+		_ = want0
+		want1 := map[string]fedschedv1a1.ClusterPreferences{
+			"kind-waofed-test-1": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
+		}
+		_ = want1
+		want01 := map[string]fedschedv1a1.ClusterPreferences{
+			"kind-waofed-test-0": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
+			"kind-waofed-test-1": {MinReplicas: 0, MaxReplicas: nil, Weight: 1},
+		}
+		_ = want01
 		It("should be scheduled on cluster0", func() {
-			want := []string{"kind-waofed-test-0"}
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy3.yaml"), want)
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy4.yaml"), want)
-			_ = want
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy3.yaml"), want0)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy4.yaml"), want0)
 		})
 		It("should be scheduled on cluster1", func() {
-			want := []string{"kind-waofed-test-1"}
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy5.yaml"), want)
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy6.yaml"), want)
-			_ = want
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy5.yaml"), want1)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy6.yaml"), want1)
 		})
 		It("should be scheduled on cluster0 and cluster1", func() {
-			want := []string{"kind-waofed-test-0", "kind-waofed-test-1"}
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy7.yaml"), want)
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy8.yaml"), want)
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy9.yaml"), want)
-			_ = want
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy7.yaml"), want01)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy8.yaml"), want01)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy9.yaml"), want01)
 		})
 		It("should not be scheduled on any cluster", func() {
-			want := []string{}
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy10.yaml"), want)
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy11.yaml"), want)
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy12.yaml"), want)
-			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy13.yaml"), want)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy10.yaml"), wantX)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy11.yaml"), wantX)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy12.yaml"), wantX)
+			testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy13.yaml"), wantX)
 			// NOTE: uncovered edge case, see readme for details
-			// testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy14.yaml"), want)
-			_ = want
+			// testRSP(testWFC2, testNS, filepath.Join("testdata", "fdeploy14.yaml"), wantX)
 		})
 	})
 })
 
-func testRSP(wfc v1beta1.WAOFedConfig, fdeployNS, fdeployFile string, shouldBeScheduledOn []string) {
+func testRSP(wfc v1beta1.WAOFedConfig, fdeployNS, fdeployFile string, want map[string]fedschedv1a1.ClusterPreferences) {
 	ctx := context.Background()
 
 	// create WAOFedConfig if not exists
@@ -455,15 +463,11 @@ func testRSP(wfc v1beta1.WAOFedConfig, fdeployNS, fdeployFile string, shouldBeSc
 	}).Should(Succeed())
 
 	// check RSP
-	check := map[string]int{}
-	for _, c := range shouldBeScheduledOn {
-		check[c] += 1
-	}
-	for k := range rsp.Spec.Clusters {
-		check[k] += 1
-	}
-	for k, v := range check {
-		Expect(v).Should(Equal(2), "err on %s, want: %#v, got: %#v", k, shouldBeScheduledOn, rsp.Spec.Clusters)
+	if rsp.Spec.Clusters == nil {
+		// both want == nil or want == map[string]fedschedv1a1.ClusterPreferences{} are ok
+		Expect(want == nil || cmp.Diff(want, map[string]fedschedv1a1.ClusterPreferences{}) == "").Should(BeTrue())
+	} else {
+		Expect(cmp.Diff(rsp.Spec.Clusters, want)).Should(BeEmpty())
 	}
 }
 
