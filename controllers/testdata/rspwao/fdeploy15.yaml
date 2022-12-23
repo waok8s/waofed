@@ -1,0 +1,28 @@
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  name: fdeploy-sample15
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+        # this speeds up the tests as no need to get container images
+        # spec:
+        #   containers:
+        #     - image: nginx:1.23.2
+        #       name: nginx
+        #       ports:
+        #         - containerPort: 80
+  placement:
+    clusterSelector: {}

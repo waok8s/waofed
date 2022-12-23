@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"math"
+	"sync"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,6 +16,7 @@ import (
 	fedcorev1b1 "sigs.k8s.io/kubefed/pkg/apis/core/v1beta1"
 	fedschedv1a1 "sigs.k8s.io/kubefed/pkg/apis/scheduling/v1alpha1"
 
+	"github.com/Nedopro2022/wao-estimator/pkg/estimator"
 	v1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
 )
 
@@ -303,7 +307,73 @@ func optimizeFnRoundRobin(_ context.Context, clusters []string, _ *v1beta1.RSPOp
 }
 
 func optimizeFnWAO(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
+	// return optimizeFnRoundRobin(ctx, clusters, settings, fdeploy)
+	lg := log.FromContext(ctx)
+	lg.Info("optimizeFnWAO")
+
+	if fdeploy == nil || fdeploy.Spec == nil || fdeploy.Spec.Template == nil {
+		return nil, fmt.Errorf("wrong fdeploy: fdeploy == nil || fdeploy.Spec == nil || fdeploy.Spec.Template == nil")
+	}
+
+	totalCPUMilli := 0
+	for _, c := range fdeploy.Spec.Template.Spec.Template.Spec.Containers {
+		totalCPUMilli += int(c.Resources.Requests.Cpu().MilliValue())
+	}
+
+	replicas := 0
+	if fdeploy.Spec.Template.Spec.Replicas != nil {
+		replicas = int(*(fdeploy.Spec.Template.Spec.Replicas))
+	}
+
+	estimatedCosts := make([][]float64, len(clusters))
+
+	var wg sync.WaitGroup
+	for i, cluster := range clusters {
+		i := i
+		cluster := cluster
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			costs := make([]float64, replicas)
+			for i := range costs {
+				costs[i] = math.Inf(1)
+			}
+
+			conf := settings.WAOEstimators[cluster]
+			var reqBuf bytes.Buffer
+			c, err := estimator.NewClient(conf.Endpoint, conf.Namespace, conf.Name, estimator.ClientOptionGetRequestAsCurl(&reqBuf))
+			if err != nil {
+				lg.Error(err, "estimator.NewClient", "cluster", cluster)
+			}
+			pc, apiErr, err := c.EstimatePowerConsumption(ctx, totalCPUMilli, replicas)
+			lg.Info(reqBuf.String())
+			if err != nil {
+				lg.Error(err, "EstimatePowerConsumption", "cluster", cluster)
+			} else if apiErr != nil {
+				lg.Error(fmt.Errorf("%v (%w)", apiErr.Message, estimator.GetErrorFromCode(*apiErr)), "EstimatePowerConsumption", "cluster", cluster)
+			} else {
+				costs = *pc.WattIncreases
+			}
+			estimatedCosts[i] = costs
+		}()
+	}
+	wg.Wait()
+
+	_, minCostPatterns, err := estimator.ComputeLeastCostPatternsFn(len(clusters), replicas, estimatedCosts)
+	if err != nil {
+		return nil, err
+	}
+
+	// NOTE: use the first pattern at this time
+	weights := minCostPatterns[0]
+
 	cps := make(map[string]fedschedv1a1.ClusterPreferences, len(clusters))
-	// TODO
+	for i, c := range clusters {
+		cps[c] = fedschedv1a1.ClusterPreferences{
+			Weight: int64(weights[i]),
+		}
+	}
+
 	return cps, nil
 }
