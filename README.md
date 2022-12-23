@@ -249,7 +249,13 @@ The script creates K8s clusters `kind-waofed-test-[01]`, deploys KubeFed control
 
 ```sh
 ./test/rspoptimizer-reset-clusters.sh
-./test/rspoptimizer-run-tests.sh
+
+# test spec.scheduling.optimizer.method="rr"
+./test/rspoptimizer-rr-run-tests.sh
+
+# test spec.scheduling.optimizer.method="wao"
+./test/rspoptimizer-wao-setup.sh
+./test/rspoptimizer-wao-run-tests.sh
 ```
 
 ## License

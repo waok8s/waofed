@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"fmt"
+	"net/url"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
@@ -56,6 +57,20 @@ func (r *WAOFedConfig) defaultScheduling() {
 		r.Spec.Scheduling.Optimizer.Method = (*RSPOptimizerMethod)(pointer.String(RSPOptimizerMethodRoundRobin))
 	}
 
+	// optimizer specific settings
+	switch *r.Spec.Scheduling.Optimizer.Method {
+	case RSPOptimizerMethodRoundRobin:
+	case RSPOptimizerMethodWAO:
+		for _, v := range r.Spec.Scheduling.Optimizer.WAOEstimators {
+			if v.Namespace == "" {
+				v.Namespace = waoEstimatorDefaultNamespace
+			}
+			if v.Name == "" {
+				v.Name = waoEstimatorDefaultName
+			}
+		}
+	default:
+	}
 }
 
 func (r *WAOFedConfig) defaultLoadbalancing() {
@@ -135,7 +150,21 @@ func (r *WAOFedConfig) validateKubeFedNS() error {
 
 func (r *WAOFedConfig) validateScheduling() error {
 	// NOTE: the defaulting webhook ensures method != nil
-	if _, ok := rspOptimizerMethodCollection[*r.Spec.Scheduling.Optimizer.Method]; !ok {
+	switch *r.Spec.Scheduling.Optimizer.Method {
+	case RSPOptimizerMethodRoundRobin:
+	case RSPOptimizerMethodWAO:
+		if len(r.Spec.Scheduling.Optimizer.WAOEstimators) == 0 {
+			return fmt.Errorf("spec.scheduling.optimizer.waoEstimators requires 1 or more items")
+		}
+		for k, v := range r.Spec.Scheduling.Optimizer.WAOEstimators {
+			if k == "" {
+				return fmt.Errorf("spec.scheduling.optimizer.waoEstimators cannot use empty string as key")
+			}
+			if _, err := url.ParseRequestURI(v.Endpoint); err != nil {
+				return fmt.Errorf("spec.scheduling.optimizer.waoEstimators[k] is not a valid URL: %w", err)
+			}
+		}
+	default:
 		return fmt.Errorf("invalid spec.scheduling.optimizer.method %s", *r.Spec.Scheduling.Optimizer.Method)
 	}
 	return nil

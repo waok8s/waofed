@@ -15,7 +15,9 @@ jobs:
         with:
           go-version-file: go.mod
       - name: "test: run test scripts"
-        run: ./test/rspoptimizer-reset-clusters.sh && ./test/rspoptimizer-run-tests.sh
+        run: ./test/rspoptimizer-reset-clusters.sh && ./test/rspoptimizer-rr-run-tests.sh
+      - name: "test: run test scripts (WAORSP)"
+        run: ./test/rspoptimizer-reset-clusters.sh && ./test/rspoptimizer-wao-setup.sh && ./test/rspoptimizer-wao-run-tests.sh
       - name: "coverage: remove generated files from cover.out"
         run: sed -i -e '/.*_generated.*\.go/d'  cover.out
       - uses: codecov/codecov-action@v3
