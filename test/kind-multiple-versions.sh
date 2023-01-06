@@ -32,11 +32,10 @@ function run {
     local ctx_cluster3=kind-"$cluster3"
 
     KIND_IMAGE=$kind_image ./hack/dev-kind-reset-clusters.sh
-    sleep 50
 
     "$KIND" load docker-image "$IMG" -n "$cluster0"
     make deploy IMG="$IMG"
-    sleep 30
+    "$KUBECTL" wait deploy -nwaofed-system waofed-controller-manager --for=condition=Available=True --timeout=60s
 
     ./hack/dev-kind-samples.sh
     sleep 5
