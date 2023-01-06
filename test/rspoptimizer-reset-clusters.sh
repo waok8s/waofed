@@ -23,8 +23,6 @@ lib::setup-kubefed "$cluster0" "$KUBEFED_VER"
 lib::join-kubefed "$cluster0" "$cluster0"
 lib::join-kubefed "$cluster1" "$cluster0"
 
-sleep 15
-
 "$KUBECTL" get kubefedclusters -n kube-federation-system
 
 "$KUBECTL" label -n kube-federation-system kfc kind-"$cluster0" mylabel=xxx

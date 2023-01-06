@@ -68,6 +68,7 @@ function lib::join-kubefed {
     "$KUBEFEDCTL" join "$member_name" --cluster-context="$member_name" --host-cluster-context="$hq_name" --v=5
 
     "$KUBECTL" config use-context "$hq_name"
+    "$KUBECTL" wait kfc -nkube-federation-system "$member_name" --for=condition=ready --timeout=60s
 }
 
 # Usage: lib::start-docker
