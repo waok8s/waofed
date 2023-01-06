@@ -93,6 +93,13 @@ function lib::install-wao-estimator {
     "$KUBECTL" apply --context "$cluster_name" -f "$WAO_ESTIMATOR_YAML"
 }
 
+# Usage: lib::wait-install-wao-estimator <cluster_name>
+function lib::wait-install-wao-estimator {
+    local cluster_name=kind-$1
+    test -s "$KUBECTL"
+    "$KUBECTL" wait deploy --context "$cluster_name" -nwao-estimator-system wao-estimator-controller-manager --for=condition=Available=True --timeout=60s
+}
+
 # Usage: lib::start-wao-estimator <cluster_name> <estimator_yaml> <port>
 function lib::start-wao-estimator {
     local cluster_name=kind-$1
