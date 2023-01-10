@@ -36,9 +36,13 @@ EOF
     docker_ip=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${kind_name}-control-plane")
     "$KUBECTL" config set-cluster "$name" --server="https://${docker_ip}:6443"
 
-    "$KUBECTL" apply -f "$CERT_MANAGER_YAML"
     "$KUBECTL" apply -f "$METRICS_SERVER_YAML"
     "$KUBECTL" patch -n kube-system deployment metrics-server --type=json -p "$METRICS_SERVER_PATCH"
+
+    "$KUBECTL" apply -f "$CERT_MANAGER_YAML"
+    "$KUBECTL" wait deploy -ncert-manager cert-manager --for=condition=Available=True --timeout=60s
+    "$KUBECTL" wait deploy -ncert-manager cert-manager-cainjector --for=condition=Available=True --timeout=60s
+    "$KUBECTL" wait deploy -ncert-manager cert-manager-webhook --for=condition=Available=True --timeout=60s
 }
 
 # Usage: lib::setup-kubefed <hq_name> <ver>
@@ -64,6 +68,7 @@ function lib::join-kubefed {
     "$KUBEFEDCTL" join "$member_name" --cluster-context="$member_name" --host-cluster-context="$hq_name" --v=5
 
     "$KUBECTL" config use-context "$hq_name"
+    "$KUBECTL" wait kfc -nkube-federation-system "$member_name" --for=condition=ready --timeout=60s
 }
 
 # Usage: lib::start-docker
@@ -86,6 +91,13 @@ function lib::install-wao-estimator {
     local cluster_name=kind-$1
     test -s "$KUBECTL"
     "$KUBECTL" apply --context "$cluster_name" -f "$WAO_ESTIMATOR_YAML"
+}
+
+# Usage: lib::wait-install-wao-estimator <cluster_name>
+function lib::wait-install-wao-estimator {
+    local cluster_name=kind-$1
+    test -s "$KUBECTL"
+    "$KUBECTL" wait deploy --context "$cluster_name" -nwao-estimator-system wao-estimator-controller-manager --for=condition=Available=True --timeout=60s
 }
 
 # Usage: lib::start-wao-estimator <cluster_name> <estimator_yaml> <port>

@@ -28,6 +28,4 @@ lib::join-kubefed "$cluster1" "$cluster0"
 lib::join-kubefed "$cluster2" "$cluster0"
 lib::join-kubefed "$cluster3" "$cluster0"
 
-sleep 15
-
 "$KUBECTL" get kubefedclusters -n kube-federation-system
