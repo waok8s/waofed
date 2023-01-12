@@ -87,13 +87,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RSPOptimizer")
 		os.Exit(1)
 	}
-	if err = (&controllers.WAOFedConfigReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "WAOFedConfig")
-		os.Exit(1)
-	}
 	if err = (&waofedv1beta1.WAOFedConfig{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "WAOFedConfig")
 		os.Exit(1)
