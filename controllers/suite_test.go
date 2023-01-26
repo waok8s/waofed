@@ -108,6 +108,11 @@ var (
 		Version:  "v1beta1",
 		Resource: "federateddeployments",
 	}
+	federatedServiceGVR = schema.GroupVersionResource{
+		Group:    "types.kubefed.io",
+		Version:  "v1beta1",
+		Resource: "federatedservices",
+	}
 	federatedNamespaceGVR = schema.GroupVersionResource{
 		Group:    "types.kubefed.io",
 		Version:  "v1beta1",
@@ -167,7 +172,7 @@ var (
 
 var cncl context.CancelFunc
 
-var beforeEachFn = func() {
+var rspOptimizerBeforeEachFn = func() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cncl = cancel
@@ -225,15 +230,15 @@ var beforeEachFn = func() {
 	wait()
 }
 
-var afterEachFn = func() {
+var rspOptimizerAfterEachFn = func() {
 	cncl() // stop the mgr
 	wait()
 }
 
-var _ = Describe("WAOFedConfig controller", func() {
+var _ = Describe("RSPOptimizer controller", func() {
 
-	BeforeEach(beforeEachFn)
-	AfterEach(afterEachFn)
+	BeforeEach(rspOptimizerBeforeEachFn)
+	AfterEach(rspOptimizerAfterEachFn)
 
 	It("should not create RSP as no WAOFedConfig found", func() {
 

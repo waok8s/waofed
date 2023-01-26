@@ -6,6 +6,14 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - core.kubefed.io
   resources:
   - kubefedclusters
@@ -34,28 +42,18 @@ rules:
   - list
   - watch
 - apiGroups:
-  - waofed.bitmedia.co.jp
+  - types.kubefed.io
   resources:
-  - waofedconfigs
+  - federatedservices
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - waofed.bitmedia.co.jp
   resources:
-  - waofedconfigs/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - waofed.bitmedia.co.jp
-  resources:
-  - waofedconfigs/status
+  - waofedconfigs
   verbs:
   - get
-  - patch
-  - update
+  - list
+  - watch
