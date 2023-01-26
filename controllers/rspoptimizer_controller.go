@@ -28,6 +28,8 @@ const (
 type RSPOptimizerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+
+	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=core.kubefed.io,resources=kubefedclusters,verbs=get;list;watch
@@ -37,6 +39,8 @@ type RSPOptimizerReconciler struct {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RSPOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.ControllerName = v1beta1.OperatorName + "-rspoptimizer-controller"
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(newUnstructuredFederatedDeployment()).
 		Owns(&fedschedv1a1.ReplicaSchedulingPreference{}).
@@ -159,7 +163,7 @@ func (r *RSPOptimizerReconciler) reconcileRSP(
 		op, err := ctrl.CreateOrUpdate(ctx, r.Client, rsp, func() error {
 			// set labels
 			rsp.Labels = map[string]string{
-				"app.kubernetes.io/created-by": ControllerName,
+				"app.kubernetes.io/created-by": r.ControllerName,
 			}
 			// set RSP spec except clusters
 			rsp.Spec = fedschedv1a1.ReplicaSchedulingPreferenceSpec{
