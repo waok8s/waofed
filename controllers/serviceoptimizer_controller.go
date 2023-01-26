@@ -53,7 +53,7 @@ func (r *ServiceOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 	if wfc.Spec.Scheduling == nil {
-		lg.Info("WAOFedConfig spec.scheduling is nil, drop the request")
+		lg.Info("WAOFedConfig spec.loadbalancing is nil, drop the request")
 		return ctrl.Result{}, nil
 	}
 
