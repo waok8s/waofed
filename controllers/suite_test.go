@@ -210,13 +210,6 @@ var beforeEachFn = func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	wfcReconciler := controllers.WAOFedConfigReconciler{
-		Client: k8sClient,
-		Scheme: scheme.Scheme,
-	}
-	err = wfcReconciler.SetupWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
 	rspOptimizerReconciler := controllers.RSPOptimizerReconciler{
 		Client: k8sClient,
 		Scheme: scheme.Scheme,
