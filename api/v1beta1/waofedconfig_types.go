@@ -87,6 +87,19 @@ type ServiceOptimizerSettings struct {
 	WAOEstimators map[string]*WAOEstimatorSetting `json:"waoEstimators,omitempty"`
 }
 
+type LoadBalancerType string
+
+const (
+	LoadBalancerTypeNone    = "none"
+	LoadBalancerTypeHAPRoxy = "HAProxy"
+)
+
+type LoadBalancerSettings struct {
+	Type      LoadBalancerType `json:"type"`
+	Namespace string           `json:"namespace"`
+	Name      string           `json:"name"`
+}
+
 type LoadBalancingSettings struct {
 	// Selector specifies the conditions that for FederatedServices to be affected by WAOFed.
 	// +optional
@@ -94,6 +107,8 @@ type LoadBalancingSettings struct {
 	// Optimizer owns optimizer settings that control how WAOFed controls loadbalancing.
 	// +optional
 	Optimizer *ServiceOptimizerSettings `json:"optimizer,omitempty"`
+	// LoadBalancer owns load balancer settings that specify the load balancer used by WAOFed.
+	LoadBalancer *LoadBalancingSettings `json:"loadbalancer,omitempty"`
 }
 
 // WAOFedConfigSpec defines the desired state of WAOFedConfig
