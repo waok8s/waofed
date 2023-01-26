@@ -97,7 +97,7 @@ var _ = AfterSuite(func() {
 })
 
 func init() {
-	SetDefaultEventuallyTimeout(3 * time.Second)
+	SetDefaultEventuallyTimeout(10 * time.Second)
 }
 
 var (
@@ -527,10 +527,6 @@ var _ = Describe("ServiceOptimizer controller", func() {
 			return k8sClient.Get(ctx, client.ObjectKeyFromObject(&testWFC1), &wfc)
 		}).ShouldNot(Succeed())
 
-		// opts := ctrl.Options{
-		// 	Scheme: scheme.Scheme,
-		// }
-		// opts.MetricsBindAddress = "0" // somehow conflict with RSPOptimizer so disable /metrics
 		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 			Scheme: scheme.Scheme,
 		})

@@ -30,8 +30,7 @@ type ServiceOptimizerReconciler struct {
 func (r *ServiceOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.ControllerName = v1beta1.OperatorName + "-serviceoptimizer-controller"
 	return ctrl.NewControllerManagedBy(mgr).
-		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
-		// For().
+		For(newUnstructuredFederatedService()).
 		Complete(r)
 }
 
