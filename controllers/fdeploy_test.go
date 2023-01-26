@@ -316,7 +316,7 @@ var (
 	}
 )
 
-func Test_setControllerReference(t *testing.T) {
+func Test_structuredFederatedDeploymentSetControllerReference(t *testing.T) {
 	type args struct {
 		owner      *structuredFederatedDeployment
 		controlled metav1.Object
@@ -388,7 +388,7 @@ func Test_setControllerReference(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := setControllerReference(tt.args.owner, tt.args.controlled); (err != nil) != tt.wantErr {
+			if err := tt.args.owner.setControllerReference(tt.args.controlled); (err != nil) != tt.wantErr {
 				t.Errorf("setControllerReference() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

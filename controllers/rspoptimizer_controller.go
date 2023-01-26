@@ -189,7 +189,7 @@ func (r *RSPOptimizerReconciler) reconcileRSP(
 			// if err := ctrl.SetControllerReference(fdeploy, rsp, r.Scheme); err != nil {
 			// 	return err
 			// }
-			if err := setControllerReference(fdeploy, rsp); err != nil {
+			if err := fdeploy.setControllerReference(rsp); err != nil {
 				return err
 			}
 			return nil

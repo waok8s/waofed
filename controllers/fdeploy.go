@@ -109,12 +109,12 @@ func convertUnstructuredFieldToObject[T any](fieldName string, unstructuredObj m
 	return obj, nil
 }
 
-func setControllerReference(owner *structuredFederatedDeployment, controlled metav1.Object) error {
+func (r *structuredFederatedDeployment) setControllerReference(controlled metav1.Object) error {
 	newRef := metav1.OwnerReference{
-		APIVersion:         owner.APIVersion,
-		Kind:               owner.Kind,
-		Name:               owner.Name,
-		UID:                owner.UID,
+		APIVersion:         r.APIVersion,
+		Kind:               r.Kind,
+		Name:               r.Name,
+		UID:                r.UID,
 		Controller:         pointer.Bool(true),
 		BlockOwnerDeletion: pointer.BoolPtr(true),
 	}
