@@ -1,0 +1,18 @@
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: fsvc-sample
+  namespace: default
+  annotations:
+    waofed.bitmedia.co.jp/loadbalancing: ""
+spec:
+  template:
+    spec:
+      selector:
+        app: nginx
+      type: LoadBalancer
+      ports:
+        - name: http
+          port: 80
+  placement:
+    clusterSelector: {}
