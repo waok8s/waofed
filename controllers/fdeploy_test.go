@@ -109,7 +109,7 @@ func Test_convertToStructuredFederatedDeployment(t *testing.T) {
 			false,
 		},
 		{"no_template",
-			args{&unstructured.Unstructured{Object: helperLoadJSON(t, "testdata/unstructuredFederatedDeploymentObject.json")}},
+			args{&unstructured.Unstructured{Object: helperLoadJSON(t, "testdata/unstructuredFederatedDeploymentObject_no_template.json")}},
 			&structuredFederatedDeployment{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       federatedDeploymentGVK.Kind,
