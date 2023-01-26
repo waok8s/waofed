@@ -123,7 +123,7 @@ var (
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
 			Scheduling: &v1beta1.SchedulingSettings{
-				Selector: &v1beta1.FederatedDeploymentSelector{
+				Selector: &v1beta1.ResourceSelector{
 					Any:           pointer.Bool(false),
 					HasAnnotation: pointer.String(v1beta1.DefaultRSPOptimizerAnnotation),
 				},
@@ -142,7 +142,7 @@ var (
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
 			Scheduling: &v1beta1.SchedulingSettings{
-				Selector: &v1beta1.FederatedDeploymentSelector{
+				Selector: &v1beta1.ResourceSelector{
 					Any: pointer.Bool(true),
 				},
 				Optimizer: &v1beta1.RSPOptimizerSettings{

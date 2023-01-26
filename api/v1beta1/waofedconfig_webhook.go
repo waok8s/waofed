@@ -40,7 +40,7 @@ func (r *WAOFedConfig) defaultScheduling() {
 
 	// selector
 	if r.Spec.Scheduling.Selector == nil {
-		r.Spec.Scheduling.Selector = &FederatedDeploymentSelector{}
+		r.Spec.Scheduling.Selector = &ResourceSelector{}
 	}
 	if r.Spec.Scheduling.Selector.Any == nil {
 		r.Spec.Scheduling.Selector.Any = pointer.Bool(false)
