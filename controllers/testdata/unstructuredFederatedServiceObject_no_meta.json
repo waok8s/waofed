@@ -1,0 +1,44 @@
+{
+    "apiVersion": "types.kubefed.io/v1beta1",
+    "kind": "FederatedService",
+    "spec": {
+        "placement": {
+            "clusters": [
+                {
+                    "name": "kind-waofed-1"
+                },
+                {
+                    "name": "kind-waofed-2"
+                },
+                {
+                    "name": "kind-waofed-3"
+                }
+            ]
+        },
+        "template": {
+            "spec": {
+                "ports": [
+                    {
+                        "name": "http",
+                        "port": 80
+                    }
+                ],
+                "selector": {
+                    "app": "nginx"
+                },
+                "type": "LoadBalancer"
+            }
+        }
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-01-26T11:47:38Z",
+                "lastUpdateTime": "2023-01-26T11:47:38Z",
+                "status": "True",
+                "type": "Propagation"
+            }
+        ],
+        "observedGeneration": 2
+    }
+}

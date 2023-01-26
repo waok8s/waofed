@@ -1,0 +1,46 @@
+{
+    "apiVersion": "types.kubefed.io/v1beta1",
+    "kind": "FederatedService",
+    "metadata": {
+        "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"types.kubefed.io/v1beta1\",\"kind\":\"FederatedService\",\"metadata\":{\"annotations\":{\"waofed.bitmedia.co.jp/loadbalancing\":\"\"},\"name\":\"fsvc-sample\",\"namespace\":\"default\"},\"spec\":{\"placement\":{\"clusters\":[{\"name\":\"kind-waofed-1\"},{\"name\":\"kind-waofed-2\"},{\"name\":\"kind-waofed-3\"}]},\"template\":{\"spec\":{\"ports\":[{\"name\":\"http\",\"port\":80}],\"selector\":{\"app\":\"nginx\"},\"type\":\"LoadBalancer\"}}}}\n",
+            "waofed.bitmedia.co.jp/loadbalancing": ""
+        },
+        "creationTimestamp": "2023-01-26T11:28:29Z",
+        "finalizers": [
+            "kubefed.io/sync-controller"
+        ],
+        "generation": 2,
+        "name": "fsvc-sample",
+        "namespace": "default",
+        "resourceVersion": "24200",
+        "uid": "fe1bdeb5-30ed-40dc-b114-c34d6447f725"
+    },
+    "spec": {
+        "template": {
+            "spec": {
+                "ports": [
+                    {
+                        "name": "http",
+                        "port": 80
+                    }
+                ],
+                "selector": {
+                    "app": "nginx"
+                },
+                "type": "LoadBalancer"
+            }
+        }
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-01-26T11:47:38Z",
+                "lastUpdateTime": "2023-01-26T11:47:38Z",
+                "status": "True",
+                "type": "Propagation"
+            }
+        ],
+        "observedGeneration": 2
+    }
+}
