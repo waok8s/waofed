@@ -13,4 +13,3 @@ spec:
       waoEstimators:
         cluster-1:
           endpoint: "http//localhost:5657"
-  loadbalancing: {}

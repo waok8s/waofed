@@ -9,9 +9,4 @@ spec:
       any: false
       hasAnnotation: waofed.bitmedia.co.jp/scheduling
     optimizer:
-      method: wao
-      waoEstimators:
-        cluster-1:
-          endpoint: "http://localhost:5657"
-          namespace: default
-          name: default
+      method: hoge

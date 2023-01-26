@@ -4,10 +4,3 @@ metadata:
   name: hoge
 spec:
   kubefedNamespace: kube-federation-system
-  scheduling:
-    selector:
-      any: false
-      hasAnnotation: waofed.bitmedia.co.jp/scheduling
-    optimizer:
-      method: rr
-  loadbalancing: {}

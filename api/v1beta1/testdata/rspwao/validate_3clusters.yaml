@@ -17,4 +17,3 @@ spec:
           endpoint: "http://localhost:5657"
         cluster-3:
           endpoint: "http://localhost:5657"
-  loadbalancing: {}

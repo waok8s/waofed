@@ -39,8 +39,8 @@ func (in *LoadBalancingSettings) DeepCopyInto(out *LoadBalancingSettings) {
 	}
 	if in.LoadBalancer != nil {
 		in, out := &in.LoadBalancer, &out.LoadBalancer
-		*out = new(LoadBalancingSettings)
-		(*in).DeepCopyInto(*out)
+		*out = new(LoadBalancerSettings)
+		**out = **in
 	}
 }
 

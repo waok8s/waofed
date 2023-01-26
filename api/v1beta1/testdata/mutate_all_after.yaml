@@ -10,4 +10,13 @@ spec:
       hasAnnotation: waofed.bitmedia.co.jp/scheduling
     optimizer:
       method: rr
-  loadbalancing: {}
+  loadbalancing:
+    selector:
+      any: false
+      hasAnnotation: waofed.bitmedia.co.jp/loadbalancing
+    optimizer:
+      method: rr
+    loadbalancer:
+      type: none
+      namespace: ""
+      name: ""

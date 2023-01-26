@@ -108,7 +108,7 @@ type LoadBalancingSettings struct {
 	// +optional
 	Optimizer *ServiceOptimizerSettings `json:"optimizer,omitempty"`
 	// LoadBalancer owns load balancer settings that specify the load balancer used by WAOFed.
-	LoadBalancer *LoadBalancingSettings `json:"loadbalancer,omitempty"`
+	LoadBalancer *LoadBalancerSettings `json:"loadbalancer,omitempty"`
 }
 
 // WAOFedConfigSpec defines the desired state of WAOFedConfig
