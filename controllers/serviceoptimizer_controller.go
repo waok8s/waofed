@@ -29,6 +29,7 @@ type ServiceOptimizerReconciler struct {
 // SetupWithManager sets up the controller with the Manager.
 func (r *ServiceOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.ControllerName = v1beta1.OperatorName + "-serviceoptimizer-controller"
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(newUnstructuredFederatedService()).
 		Complete(r)
@@ -51,12 +52,60 @@ func (r *ServiceOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		lg.Error(err, fmt.Sprintf("unable to get WAOFedConfig %s", client.ObjectKeyFromObject(wfc)))
 		return ctrl.Result{}, err
 	}
-	if wfc.Spec.Scheduling == nil {
+	if wfc.Spec.LoadBalancing == nil {
 		lg.Info("WAOFedConfig spec.loadbalancing is nil, drop the request")
 		return ctrl.Result{}, nil
 	}
 
-	// TODO: get FederatedService
+	// get FederatedService
+	fservice := newUnstructuredFederatedService()
+	err = r.Get(ctx, req.NamespacedName, fservice)
+	if errors.IsNotFound(err) {
+		lg.Info("FederatedService is already deleted")
+		return ctrl.Result{}, nil
+	}
+	if err != nil {
+		lg.Error(err, "unable to get FederatedService")
+		return ctrl.Result{}, nil
+	}
+	fsvc, err := convertToStructuredFederatedService(fservice)
+	if err != nil {
+		lg.Error(err, "unable to convert FederatedService")
+		return ctrl.Result{}, err
+	}
+
+	// check if the FederatedService is using ServiceOptimizer
+	skip := true
+	if *wfc.Spec.LoadBalancing.Selector.Any {
+		// check selector.any
+		skip = false
+	} else if _, ok := fsvc.GetAnnotations()[*wfc.Spec.LoadBalancing.Selector.HasAnnotation]; ok {
+		// check ServiceOptimizer annotation exists in the FederatedService
+		// currently the value is ignored
+		skip = false
+	}
+
+	if skip {
+		// Do nothing here for simplicity.
+		// So you have to recreate a FederatedDeployment
+		// to enable/disable ServiceOptimizer for the FederatedDeployment.
+		// Future work: do some check here just like RSPOptimizerReconciler
+		lg.Info("skip ServiceOptimizer")
+		return ctrl.Result{}, nil
+	}
+
+	// TODO
+	switch *wfc.Spec.LoadBalancing.Optimizer.Method {
+	case v1beta1.ServiceOptimizerMethodRoundRobin:
+	case v1beta1.ServiceOptimizerMethodWAO:
+	default:
+	}
+
+	switch wfc.Spec.LoadBalancing.LoadBalancer.Type {
+	case v1beta1.LoadBalancerTypeNone:
+	case v1beta1.LoadBalancerTypeHAPRoxy:
+	default:
+	}
 
 	return ctrl.Result{}, nil
 }
