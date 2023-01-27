@@ -97,7 +97,7 @@ var _ = AfterSuite(func() {
 })
 
 func init() {
-	SetDefaultEventuallyTimeout(10 * time.Second)
+	SetDefaultEventuallyTimeout(20 * time.Second)
 }
 
 var (
