@@ -1,0 +1,27 @@
+# permissions for end users to view serviceloadbalancingpreferences.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: serviceloadbalancingpreference-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: waofed
+    app.kubernetes.io/part-of: waofed
+    app.kubernetes.io/managed-by: kustomize
+  name: serviceloadbalancingpreference-viewer-role
+rules:
+- apiGroups:
+  - waofed.bitmedia.co.jp
+  resources:
+  - serviceloadbalancingpreferences
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - waofed.bitmedia.co.jp
+  resources:
+  - serviceloadbalancingpreferences/status
+  verbs:
+  - get
