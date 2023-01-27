@@ -20,10 +20,6 @@ import (
 	v1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
 )
 
-const (
-	ControllerName = v1beta1.OperatorName + "-rspoptimizer-controller"
-)
-
 // RSPOptimizerReconciler reconciles a RSPOptimizer object
 type RSPOptimizerReconciler struct {
 	client.Client
