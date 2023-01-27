@@ -168,69 +168,74 @@ var (
 	}
 )
 
-var _ = Describe("RSPOptimizer controller", func() {
-	var cncl context.CancelFunc
+var cncl context.CancelFunc
 
-	BeforeEach(func() {
-		ctx, cancel := context.WithCancel(context.Background())
-		cncl = cancel
+var rspOptimizerBeforeEachFn = func() {
+	ctx, cancel := context.WithCancel(context.Background())
+	cncl = cancel
 
-		var err error
+	var err error
 
-		// create FederatedNamespace if not exists
-		_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Get(ctx, testNS, metav1.GetOptions{})
-		if errors.IsNotFound(err) {
-			fns, _, _, err := helperLoadYAML(filepath.Join("testdata", "fns.yaml"))
-			Expect(err).NotTo(HaveOccurred())
-			_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Create(ctx, fns, metav1.CreateOptions{})
-			Expect(err).NotTo(HaveOccurred())
-		}
-
-		// delete all FederatedDeployment
-		fdeployList, err := k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).List(ctx, metav1.ListOptions{})
+	// create FederatedNamespace if not exists
+	_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Get(ctx, testNS, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		fns, _, _, err := helperLoadYAML(filepath.Join("testdata", "fns.yaml"))
 		Expect(err).NotTo(HaveOccurred())
-		for _, fdeploy := range fdeployList.Items {
-			err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Delete(ctx, fdeploy.GetName(), metav1.DeleteOptions{})
-			Expect(err).NotTo(HaveOccurred())
-		}
-		for _, fdeploy := range fdeployList.Items {
-			Eventually(func() error {
-				_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Get(ctx, fdeploy.GetName(), metav1.GetOptions{})
-				return err
-			}).ShouldNot(Succeed())
-		}
-
-		// delete all WAOFedConfig
-		err = k8sClient.DeleteAllOf(ctx, &v1beta1.WAOFedConfig{}, client.InNamespace("")) // cluster-scoped
+		_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Create(ctx, fns, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		var wfc v1beta1.WAOFedConfig
+	}
+
+	// delete all FederatedDeployment
+	fdeployList, err := k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(testNS).List(ctx, metav1.ListOptions{})
+	Expect(err).NotTo(HaveOccurred())
+	for _, fdeploy := range fdeployList.Items {
+		err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Delete(ctx, fdeploy.GetName(), metav1.DeleteOptions{})
+		Expect(err).NotTo(HaveOccurred())
+	}
+	for _, fdeploy := range fdeployList.Items {
 		Eventually(func() error {
-			return k8sClient.Get(ctx, client.ObjectKeyFromObject(&testWFC1), &wfc)
+			_, err = k8sDynamicClient.Resource(federatedDeploymentGVR).Namespace(fdeploy.GetNamespace()).Get(ctx, fdeploy.GetName(), metav1.GetOptions{})
+			return err
 		}).ShouldNot(Succeed())
+	}
 
-		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-			Scheme: scheme.Scheme,
-		})
-		Expect(err).NotTo(HaveOccurred())
+	// delete all WAOFedConfig
+	err = k8sClient.DeleteAllOf(ctx, &v1beta1.WAOFedConfig{}, client.InNamespace("")) // cluster-scoped
+	Expect(err).NotTo(HaveOccurred())
+	var wfc v1beta1.WAOFedConfig
+	Eventually(func() error {
+		return k8sClient.Get(ctx, client.ObjectKeyFromObject(&testWFC1), &wfc)
+	}).ShouldNot(Succeed())
 
-		rspOptimizerReconciler := controllers.RSPOptimizerReconciler{
-			Client: k8sClient,
-			Scheme: scheme.Scheme,
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	rspOptimizerReconciler := controllers.RSPOptimizerReconciler{
+		Client: k8sClient,
+		Scheme: scheme.Scheme,
+	}
+	err = rspOptimizerReconciler.SetupWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	go func() {
+		if err := mgr.Start(ctx); err != nil {
+			panic(err)
 		}
-		err = rspOptimizerReconciler.SetupWithManager(mgr)
-		Expect(err).NotTo(HaveOccurred())
+	}()
+	wait()
+}
 
-		go func() {
-			if err := mgr.Start(ctx); err != nil {
-				panic(err)
-			}
-		}()
-		wait()
-	})
-	AfterEach(func() {
-		cncl() // stop the mgr
-		wait()
-	})
+var rspOptimizerAfterEachFn = func() {
+	cncl() // stop the mgr
+	wait()
+}
+
+var _ = Describe("RSPOptimizer controller", func() {
+
+	BeforeEach(rspOptimizerBeforeEachFn)
+	AfterEach(rspOptimizerAfterEachFn)
 
 	It("should not create RSP as no WAOFedConfig found", func() {
 
@@ -486,70 +491,72 @@ var (
 	}
 )
 
-var _ = Describe("SLPOptimizer controller", func() {
-	var cncl context.CancelFunc
+var slpOptimizerBeforeEachFn = func() {
+	ctx, cancel := context.WithCancel(context.Background())
+	cncl = cancel
 
-	BeforeEach(func() {
+	var err error
 
-		ctx, cancel := context.WithCancel(context.Background())
-		cncl = cancel
-
-		var err error
-
-		// create FederatedNamespace if not exists
-		_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Get(ctx, testNS, metav1.GetOptions{})
-		if errors.IsNotFound(err) {
-			fns, _, _, err := helperLoadYAML(filepath.Join("testdata", "fns.yaml"))
-			Expect(err).NotTo(HaveOccurred())
-			_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Create(ctx, fns, metav1.CreateOptions{})
-			Expect(err).NotTo(HaveOccurred())
-		}
-
-		// delete all FederatedService
-		fsvcList, err := k8sDynamicClient.Resource(federatedServiceGVR).Namespace(testNS).List(ctx, metav1.ListOptions{})
+	// create FederatedNamespace if not exists
+	_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Get(ctx, testNS, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		fns, _, _, err := helperLoadYAML(filepath.Join("testdata", "fns.yaml"))
 		Expect(err).NotTo(HaveOccurred())
-		for _, fsvc := range fsvcList.Items {
-			err = k8sDynamicClient.Resource(federatedServiceGVR).Namespace(fsvc.GetNamespace()).Delete(ctx, fsvc.GetName(), metav1.DeleteOptions{})
-			Expect(err).NotTo(HaveOccurred())
-		}
-		for _, fsvc := range fsvcList.Items {
-			Eventually(func() error {
-				_, err = k8sDynamicClient.Resource(federatedServiceGVR).Namespace(fsvc.GetNamespace()).Get(ctx, fsvc.GetName(), metav1.GetOptions{})
-				return err
-			}).ShouldNot(Succeed())
-		}
-
-		// delete all WAOFedConfig
-		err = k8sClient.DeleteAllOf(ctx, &v1beta1.WAOFedConfig{}, client.InNamespace("")) // cluster-scoped
+		_, err = k8sDynamicClient.Resource(federatedNamespaceGVR).Namespace(testNS).Create(ctx, fns, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		var wfc v1beta1.WAOFedConfig
+	}
+
+	// delete all FederatedService
+	fsvcList, err := k8sDynamicClient.Resource(federatedServiceGVR).Namespace(testNS).List(ctx, metav1.ListOptions{})
+	Expect(err).NotTo(HaveOccurred())
+	for _, fsvc := range fsvcList.Items {
+		err = k8sDynamicClient.Resource(federatedServiceGVR).Namespace(fsvc.GetNamespace()).Delete(ctx, fsvc.GetName(), metav1.DeleteOptions{})
+		Expect(err).NotTo(HaveOccurred())
+	}
+	for _, fsvc := range fsvcList.Items {
 		Eventually(func() error {
-			return k8sClient.Get(ctx, client.ObjectKeyFromObject(&testWFC1), &wfc)
+			_, err = k8sDynamicClient.Resource(federatedServiceGVR).Namespace(fsvc.GetNamespace()).Get(ctx, fsvc.GetName(), metav1.GetOptions{})
+			return err
 		}).ShouldNot(Succeed())
+	}
 
-		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-			Scheme: scheme.Scheme,
-		})
-		Expect(err).NotTo(HaveOccurred())
+	// delete all WAOFedConfig
+	err = k8sClient.DeleteAllOf(ctx, &v1beta1.WAOFedConfig{}, client.InNamespace("")) // cluster-scoped
+	Expect(err).NotTo(HaveOccurred())
+	var wfc v1beta1.WAOFedConfig
+	Eventually(func() error {
+		return k8sClient.Get(ctx, client.ObjectKeyFromObject(&testWFC1), &wfc)
+	}).ShouldNot(Succeed())
 
-		slpOptimizerReconciler := controllers.SLPOptimizerReconciler{
-			Client: k8sClient,
-			Scheme: scheme.Scheme,
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	slpOptimizerReconciler := controllers.SLPOptimizerReconciler{
+		Client: k8sClient,
+		Scheme: scheme.Scheme,
+	}
+	err = slpOptimizerReconciler.SetupWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	go func() {
+		if err := mgr.Start(ctx); err != nil {
+			panic(err)
 		}
-		err = slpOptimizerReconciler.SetupWithManager(mgr)
-		Expect(err).NotTo(HaveOccurred())
+	}()
+	wait()
+}
 
-		go func() {
-			if err := mgr.Start(ctx); err != nil {
-				panic(err)
-			}
-		}()
-		wait()
-	})
-	AfterEach(func() {
-		cncl() // stop the mgr
-		wait()
-	})
+var slpOptimizerAfterEachFn = func() {
+	cncl() // stop the mgr
+	wait()
+}
+
+var _ = Describe("SLPOptimizer controller", func() {
+
+	BeforeEach(slpOptimizerBeforeEachFn)
+	AfterEach(slpOptimizerAfterEachFn)
 
 	It("should not do anything as no WAOFedConfig found", func() {
 

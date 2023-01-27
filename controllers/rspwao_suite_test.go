@@ -48,8 +48,8 @@ var (
 
 var _ = Describe("WAOFedConfig controller (RSPWAO)", func() {
 
-	BeforeEach(beforeEachFn)
-	AfterEach(afterEachFn)
+	BeforeEach(rspOptimizerBeforeEachFn)
+	AfterEach(rspOptimizerAfterEachFn)
 
 	Context("schedule on clusters (RSPWAO)", func() {
 		type cps map[string]fedschedv1a1.ClusterPreferences
