@@ -7,8 +7,8 @@ import (
 const (
 	OperatorName = "waofed"
 
-	DefaultRSPOptimizerAnnotation     = "waofed.bitmedia.co.jp/scheduling"
-	DefaultServiceOptimizerAnnotation = "waofed.bitmedia.co.jp/loadbalancing"
+	DefaultRSPOptimizerAnnotation = "waofed.bitmedia.co.jp/scheduling"
+	DefaultSLPOptimizerAnnotation = "waofed.bitmedia.co.jp/loadbalancing"
 
 	// WAOFedConfigName specifies the name of the only instance of WAOFedConfig that exists in the cluster.
 	WAOFedConfigName = "default"
@@ -66,17 +66,17 @@ type SchedulingSettings struct {
 	Optimizer *RSPOptimizerSettings `json:"optimizer,omitempty"`
 }
 
-type ServiceOptimizerMethod string
+type SLPOptimizerMethod string
 
 const (
-	ServiceOptimizerMethodRoundRobin = "rr"
-	ServiceOptimizerMethodWAO        = "wao"
+	SLPOptimizerMethodRoundRobin = "rr"
+	SLPOptimizerMethodWAO        = "wao"
 )
 
-type ServiceOptimizerSettings struct {
+type SLPOptimizerSettings struct {
 	// Method specifies the method name to use. (default: "rr")
 	// +optional
-	Method *ServiceOptimizerMethod `json:"method,omitempty"`
+	Method *SLPOptimizerMethod `json:"method,omitempty"`
 
 	// WAOEstimators specifies WAO-Estimator settings for member clusters.
 	// Required when method "wao" is specified.
@@ -106,7 +106,7 @@ type LoadBalancingSettings struct {
 	Selector *ResourceSelector `json:"selector,omitempty"`
 	// Optimizer owns optimizer settings that control how WAOFed controls loadbalancing.
 	// +optional
-	Optimizer *ServiceOptimizerSettings `json:"optimizer,omitempty"`
+	Optimizer *SLPOptimizerSettings `json:"optimizer,omitempty"`
 	// LoadBalancer owns load balancer settings that specify the load balancer used by WAOFed.
 	LoadBalancer *LoadBalancerSettings `json:"loadbalancer,omitempty"`
 }

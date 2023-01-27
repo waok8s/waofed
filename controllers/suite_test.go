@@ -486,7 +486,7 @@ var (
 	}
 )
 
-var _ = Describe("ServiceOptimizer controller", func() {
+var _ = Describe("SLPOptimizer controller", func() {
 	var cncl context.CancelFunc
 
 	BeforeEach(func() {
@@ -532,11 +532,11 @@ var _ = Describe("ServiceOptimizer controller", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		svcOptimizerReconciler := controllers.ServiceOptimizerReconciler{
+		slpOptimizerReconciler := controllers.SLPOptimizerReconciler{
 			Client: k8sClient,
 			Scheme: scheme.Scheme,
 		}
-		err = svcOptimizerReconciler.SetupWithManager(mgr)
+		err = slpOptimizerReconciler.SetupWithManager(mgr)
 		Expect(err).NotTo(HaveOccurred())
 
 		go func() {

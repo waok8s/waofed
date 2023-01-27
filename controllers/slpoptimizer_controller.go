@@ -13,8 +13,8 @@ import (
 	v1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
 )
 
-// ServiceOptimizerReconciler reconciles a ServiceOptimizer object
-type ServiceOptimizerReconciler struct {
+// SLPOptimizerReconciler reconciles a SLPOptimizer object
+type SLPOptimizerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
@@ -27,8 +27,8 @@ type ServiceOptimizerReconciler struct {
 //+kubebuilder:rbac:groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=get;list;watch
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *ServiceOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.ControllerName = v1beta1.OperatorName + "-serviceoptimizer-controller"
+func (r *SLPOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.ControllerName = v1beta1.OperatorName + "-SLPOptimizer-controller"
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(newUnstructuredFederatedService()).
@@ -36,7 +36,7 @@ func (r *ServiceOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // Reconcile moves the current state of the cluster closer to the desired state.
-func (r *ServiceOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *SLPOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	lg := log.FromContext(ctx)
 	lg.Info("Reconcile")
 
@@ -74,13 +74,13 @@ func (r *ServiceOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	// check if the FederatedService is using ServiceOptimizer
+	// check if the FederatedService is using SLPOptimizer
 	skip := true
 	if *wfc.Spec.LoadBalancing.Selector.Any {
 		// check selector.any
 		skip = false
 	} else if _, ok := fsvc.GetAnnotations()[*wfc.Spec.LoadBalancing.Selector.HasAnnotation]; ok {
-		// check ServiceOptimizer annotation exists in the FederatedService
+		// check SLPOptimizer annotation exists in the FederatedService
 		// currently the value is ignored
 		skip = false
 	}
@@ -88,16 +88,16 @@ func (r *ServiceOptimizerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	if skip {
 		// Do nothing here for simplicity.
 		// So you have to recreate a FederatedDeployment
-		// to enable/disable ServiceOptimizer for the FederatedDeployment.
+		// to enable/disable SLPOptimizer for the FederatedDeployment.
 		// Future work: do some check here just like RSPOptimizerReconciler
-		lg.Info("skip ServiceOptimizer")
+		lg.Info("skip SLPOptimizer")
 		return ctrl.Result{}, nil
 	}
 
 	// TODO
 	switch *wfc.Spec.LoadBalancing.Optimizer.Method {
-	case v1beta1.ServiceOptimizerMethodRoundRobin:
-	case v1beta1.ServiceOptimizerMethodWAO:
+	case v1beta1.SLPOptimizerMethodRoundRobin:
+	case v1beta1.SLPOptimizerMethodWAO:
 	default:
 	}
 

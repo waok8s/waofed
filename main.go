@@ -91,11 +91,11 @@ func main() {
 		setupLog.Error(err, "unable to create webhook", "webhook", "WAOFedConfig")
 		os.Exit(1)
 	}
-	if err = (&controllers.ServiceOptimizerReconciler{
+	if err = (&controllers.SLPOptimizerReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ServiceOptimizer")
+		setupLog.Error(err, "unable to create controller", "controller", "SLPOptimizer")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

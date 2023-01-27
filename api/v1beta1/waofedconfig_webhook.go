@@ -84,21 +84,21 @@ func (r *WAOFedConfig) defaultLoadbalancing() {
 		r.Spec.LoadBalancing.Selector.Any = pointer.Bool(false)
 	}
 	if r.Spec.LoadBalancing.Selector.HasAnnotation == nil {
-		r.Spec.LoadBalancing.Selector.HasAnnotation = pointer.String(DefaultServiceOptimizerAnnotation)
+		r.Spec.LoadBalancing.Selector.HasAnnotation = pointer.String(DefaultSLPOptimizerAnnotation)
 	}
 
 	// optimizer
 	if r.Spec.LoadBalancing.Optimizer == nil {
-		r.Spec.LoadBalancing.Optimizer = &ServiceOptimizerSettings{}
+		r.Spec.LoadBalancing.Optimizer = &SLPOptimizerSettings{}
 	}
 	if r.Spec.LoadBalancing.Optimizer.Method == nil {
-		r.Spec.LoadBalancing.Optimizer.Method = (*ServiceOptimizerMethod)(pointer.String(ServiceOptimizerMethodRoundRobin))
+		r.Spec.LoadBalancing.Optimizer.Method = (*SLPOptimizerMethod)(pointer.String(SLPOptimizerMethodRoundRobin))
 	}
 
 	// optimizer specific settings
 	switch *r.Spec.LoadBalancing.Optimizer.Method {
-	case ServiceOptimizerMethodRoundRobin:
-	case ServiceOptimizerMethodWAO:
+	case SLPOptimizerMethodRoundRobin:
+	case SLPOptimizerMethodWAO:
 		for _, v := range r.Spec.LoadBalancing.Optimizer.WAOEstimators {
 			if v.Namespace == "" {
 				v.Namespace = waoEstimatorDefaultNamespace
@@ -219,8 +219,8 @@ func (r *WAOFedConfig) validateScheduling() error {
 func (r *WAOFedConfig) validateLoadbalancing() error {
 	// NOTE: the defaulting webhook ensures method != nil
 	switch *r.Spec.LoadBalancing.Optimizer.Method {
-	case ServiceOptimizerMethodRoundRobin:
-	case ServiceOptimizerMethodWAO:
+	case SLPOptimizerMethodRoundRobin:
+	case SLPOptimizerMethodWAO:
 		return validateWAOEstimators(r.Spec.LoadBalancing.Optimizer.WAOEstimators, "spec.loadbalancing.optimizer.waoEstimators")
 	default:
 		return fmt.Errorf("invalid spec.loadbalancing.optimizer.method %s", *r.Spec.LoadBalancing.Optimizer.Method)
