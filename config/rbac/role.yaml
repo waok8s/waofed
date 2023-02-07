@@ -44,6 +44,18 @@ rules:
 - apiGroups:
   - waofed.bitmedia.co.jp
   resources:
+  - serviceloadbalancingpreference
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - waofed.bitmedia.co.jp
+  resources:
   - waofedconfigs
   verbs:
   - get
