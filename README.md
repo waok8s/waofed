@@ -16,10 +16,14 @@ Optimizes workload allocation and loadbalancing on KubeFed.
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Deploy a `WAOFedConfig` resource](#deploy-a-waofedconfig-resource)
-  - [Scheduling settings (RSPOptimizer)](#scheduling-settings-rspoptimizer)
-  - [Deploy `FederatedDeployment` resources](#deploy-federateddeployment-resources)
-  - [Loadbalancing settings (SLPOptimizer)](#loadbalancing-settings-slpoptimizer)
-  - [Deploy `FederatedServices` resources](#deploy-federatedservices-resources)
+  - [Schedule Optimization](#schedule-optimization)
+    - [Scheduling settings (RSPOptimizer)](#scheduling-settings-rspoptimizer)
+    - [Deploy a `FederatedDeployment` resource](#deploy-a-federateddeployment-resource)
+    - [See the generated `ReplicaSchedulingPreference` resource](#see-the-generated-replicaschedulingpreference-resource)
+  - [Access Optimization](#access-optimization)
+    - [Loadbalancing settings (SLPOptimizer)](#loadbalancing-settings-slpoptimizer)
+    - [Deploy `FederatedServices` resources](#deploy-federatedservices-resources)
+    - [See the generated `ServiceLoadbalancingPreference` resource](#see-the-generated-serviceloadbalancingpreference-resource)
   - [Uninstallation](#uninstallation)
 - [Developing](#developing)
   - [Prerequisites](#prerequisites)
@@ -64,7 +68,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 Deploy the Operator with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
-kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.3.0/waofed.yaml
+kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.4.0/waofed.yaml
 ```
 
 ### Deploy a `WAOFedConfig` resource
@@ -92,7 +96,9 @@ spec:
       method: "rr"
 ```
 
-### Scheduling settings (RSPOptimizer)
+### Schedule Optimization
+
+#### Scheduling settings (RSPOptimizer)
 
 RSPOptimizer watches the creation of `FederatedDeployment` resources and generates `ReplicaSchedulingPreference` resources with optimized workload allocation determined by the specified method.
 
@@ -109,7 +115,7 @@ Supported methods: `rr` (Round-robin, for testing purposes), `wao` ([WAO-Estimat
 > +      any: true
 > ```
 
-### Deploy `FederatedDeployment` resources
+#### Deploy a `FederatedDeployment` resource
 
 > 💡 Ensure the namespace is federated by a `FederatedNamespace` resource before deploying `FederatedDeployment` resources.
 > 
@@ -156,6 +162,7 @@ spec:
     clusterSelector: {}
 ```
 
+#### See the generated `ReplicaSchedulingPreference` resource
 
 > 💡 You can see the resources with the following commands, and see the details by adding `-oyaml`.
 > ```sh
@@ -216,7 +223,11 @@ spec:
 >         - { key: mylabel, operator: Exists }
 > ```
 
-### Loadbalancing settings (SLPOptimizer)
+### Access Optimization
+
+#### Loadbalancing settings (SLPOptimizer)
+
+> ⚠️ NOTE: A supported controller is required to handle the actual loadbalancing according to `ServiceLoadbalancingPreference`.
 
 SLPOptimizer watches the creation of `FederatedService` resources and generates `ServiceLoadbalancingPreference` resources with optimized workload allocation determined by the specified method.
 
@@ -233,7 +244,7 @@ Supported methods: `rr` (Round-robin, for testing purposes)
 > +      any: true
 > ```
 
-### Deploy `FederatedServices` resources
+#### Deploy `FederatedServices` resources
 
 > 💡 Ensure the namespace is federated by a `FederatedNamespace` resource before deploying `FederatedService` resources.
 > 
@@ -270,6 +281,8 @@ spec:
     clusterSelector: {}
 ```
 
+#### See the generated `ServiceLoadbalancingPreference` resource
+
 > 💡 You can see the resources with the following commands, and see the details by adding `-oyaml`.
 > ```sh
 > $ kubectl get fsvc
@@ -286,7 +299,7 @@ The generated `ServiceLoadbalancingPreference` has an owner reference indicating
 `spec.clusters` includes all clusters specified in `FederatedService` `spec.placement` (SLPOptimizer parses the selector and retrives clusters), and `spec.clusters[name].weight` is optimized by the method specified in `WAOFedConfig`. This sample uses `rr` so all clusters have a weight of 1.
 
 ```yaml
-apiVersion: types.kubefed.io/v1beta1
+apiVersion: waofed.bitmedia.co.jp/v1beta1
 kind: ServiceLoadbalancingPreference
 metadata:
   name: fsvc-sample
@@ -319,7 +332,7 @@ spec:
 Delete the Operator and resources with the following command.
 
 ```sh
-kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.3.0/waofed.yaml
+kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.4.0/waofed.yaml
 ```
 
 ## Developing

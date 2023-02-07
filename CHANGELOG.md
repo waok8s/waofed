@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 - 2023-02-07
+
+### Added
+
+- SLPOptimizer with round-robin (`rr`) loadbalancing capabilities.
+
 ## 0.3.0 - 2022-12-23
 
 ### Added
