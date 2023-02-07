@@ -64,7 +64,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 Deploy the Operator with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
-kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.2.1/waofed.yaml
+kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.3.0/waofed.yaml
 ```
 
 ### Deploy a `WAOFedConfig` resource
@@ -96,7 +96,7 @@ spec:
 
 RSPOptimizer watches the creation of `FederatedDeployment` resources and generates `ReplicaSchedulingPreference` resources with optimized workload allocation determined by the specified method.
 
-Supported methods: `rr` (Round-robin, for testing purposes)
+Supported methods: `rr` (Round-robin, for testing purposes), `wao` ([WAO-Estimator](https://github.com/Nedopro2022/wao-estimator) is required)
 
 `spec.scheduling.selector` specifies the conditions for the `FederatedDeployment` resources that KubeFed watches.
 
@@ -319,7 +319,7 @@ spec:
 Delete the Operator and resources with the following command.
 
 ```sh
-kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.2.1/waofed.yaml
+kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.3.0/waofed.yaml
 ```
 
 ## Developing
