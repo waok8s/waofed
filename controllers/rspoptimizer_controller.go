@@ -20,14 +20,12 @@ import (
 	v1beta1 "github.com/Nedopro2022/waofed/api/v1beta1"
 )
 
-const (
-	ControllerName = v1beta1.OperatorName + "-rspoptimizer-controller"
-)
-
 // RSPOptimizerReconciler reconciles a RSPOptimizer object
 type RSPOptimizerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+
+	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=core.kubefed.io,resources=kubefedclusters,verbs=get;list;watch
@@ -37,6 +35,8 @@ type RSPOptimizerReconciler struct {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RSPOptimizerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.ControllerName = v1beta1.OperatorName + "-rspoptimizer-controller"
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(newUnstructuredFederatedDeployment()).
 		Owns(&fedschedv1a1.ReplicaSchedulingPreference{}).
@@ -159,7 +159,7 @@ func (r *RSPOptimizerReconciler) reconcileRSP(
 		op, err := ctrl.CreateOrUpdate(ctx, r.Client, rsp, func() error {
 			// set labels
 			rsp.Labels = map[string]string{
-				"app.kubernetes.io/created-by": ControllerName,
+				"app.kubernetes.io/created-by": r.ControllerName,
 			}
 			// set RSP spec except clusters
 			rsp.Spec = fedschedv1a1.ReplicaSchedulingPreferenceSpec{
@@ -185,7 +185,7 @@ func (r *RSPOptimizerReconciler) reconcileRSP(
 			// if err := ctrl.SetControllerReference(fdeploy, rsp, r.Scheme); err != nil {
 			// 	return err
 			// }
-			if err := setControllerReference(fdeploy, rsp); err != nil {
+			if err := fdeploy.setControllerReference(rsp); err != nil {
 				return err
 			}
 			return nil
@@ -275,7 +275,7 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	lg.Info("schedulable clusters", "clusters", clusters)
 
 	// optimize cluster weights
-	optimizeFn, ok := optimizeFuncCollection[*wfc.Spec.Scheduling.Optimizer.Method]
+	optimizeFn, ok := rspOptimizeFuncCollection[*wfc.Spec.Scheduling.Optimizer.Method]
 	if !ok {
 		return nil, fmt.Errorf("invalid method \"%v\"", wfc.Spec.Scheduling.Optimizer.Method)
 	}
@@ -287,14 +287,14 @@ func (r *RSPOptimizerReconciler) optimizeClusterWeights(
 	return cps, nil
 }
 
-type optimizeFunc func(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error)
+type rspOptimizeFunc func(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error)
 
-var optimizeFuncCollection = map[v1beta1.RSPOptimizerMethod]optimizeFunc{
-	v1beta1.RSPOptimizerMethodRoundRobin: optimizeFnRoundRobin,
-	v1beta1.RSPOptimizerMethodWAO:        optimizeFnWAO,
+var rspOptimizeFuncCollection = map[v1beta1.RSPOptimizerMethod]rspOptimizeFunc{
+	v1beta1.RSPOptimizerMethodRoundRobin: rspOptimizeFnRoundRobin,
+	v1beta1.RSPOptimizerMethodWAO:        rspOptimizeFnWAO,
 }
 
-func optimizeFnRoundRobin(_ context.Context, clusters []string, _ *v1beta1.RSPOptimizerSettings, _ *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
+func rspOptimizeFnRoundRobin(_ context.Context, clusters []string, _ *v1beta1.RSPOptimizerSettings, _ *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	cps := make(map[string]fedschedv1a1.ClusterPreferences, len(clusters))
 	for _, cl := range clusters {
 		cps[cl] = fedschedv1a1.ClusterPreferences{
@@ -306,9 +306,9 @@ func optimizeFnRoundRobin(_ context.Context, clusters []string, _ *v1beta1.RSPOp
 	return cps, nil
 }
 
-func optimizeFnWAO(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
+func rspOptimizeFnWAO(ctx context.Context, clusters []string, settings *v1beta1.RSPOptimizerSettings, fdeploy *structuredFederatedDeployment) (map[string]fedschedv1a1.ClusterPreferences, error) {
 	lg := log.FromContext(ctx)
-	lg.Info("optimizeFnWAO")
+	lg.Info("rspOptimizeFnWAO")
 
 	if fdeploy == nil || fdeploy.Spec == nil || fdeploy.Spec.Template == nil {
 		return nil, fmt.Errorf("wrong fdeploy: fdeploy == nil || fdeploy.Spec == nil || fdeploy.Spec.Template == nil")

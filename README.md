@@ -7,7 +7,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/Nedopro2022/waofed)](https://goreportcard.com/report/github.com/Nedopro2022/waofed)
 [![codecov](https://codecov.io/gh/Nedopro2022/waofed/branch/main/graph/badge.svg)](https://codecov.io/gh/Nedopro2022/waofed)
 
-Optimizes workload allocation on KubeFed.
+Optimizes workload allocation and loadbalancing on KubeFed.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -16,9 +16,14 @@ Optimizes workload allocation on KubeFed.
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Deploy a `WAOFedConfig` resource](#deploy-a-waofedconfig-resource)
+  - [Schedule Optimization](#schedule-optimization)
     - [Scheduling settings (RSPOptimizer)](#scheduling-settings-rspoptimizer)
-  - [Deploy `FederatedDeployment` resources](#deploy-federateddeployment-resources)
-  - [Load balancing settings](#load-balancing-settings)
+    - [Deploy a `FederatedDeployment` resource](#deploy-a-federateddeployment-resource)
+    - [See the generated `ReplicaSchedulingPreference` resource](#see-the-generated-replicaschedulingpreference-resource)
+  - [Access Optimization](#access-optimization)
+    - [Loadbalancing settings (SLPOptimizer)](#loadbalancing-settings-slpoptimizer)
+    - [Deploy `FederatedServices` resources](#deploy-federatedservices-resources)
+    - [See the generated `ServiceLoadbalancingPreference` resource](#see-the-generated-serviceloadbalancingpreference-resource)
   - [Uninstallation](#uninstallation)
 - [Developing](#developing)
   - [Prerequisites](#prerequisites)
@@ -30,10 +35,10 @@ Optimizes workload allocation on KubeFed.
 
 ## Overview
 
-WAOFed optimizes workload allocation on [KubeFed](https://github.com/kubernetes-sigs/kubefed) with the following components:
+WAOFed optimizes workload allocation and loadbalancing on [KubeFed](https://github.com/kubernetes-sigs/kubefed) with the following components:
 
-- **RSPOptimizer**: Optimizes `FederatedDeployment` [weights](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#distribute-total-replicas-in-weighted-proportions) across clusters by generating [`ReplicaSchedulingPreference`](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#replicaschedulingpreference) using the specified method.
-- // TODO: load balancer
+- **RSPOptimizer**: Optimizes `FederatedDeployment` [weights](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#distribute-total-replicas-in-weighted-proportions) across clusters by generating [`ReplicaSchedulingPreference`](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md#replicaschedulingpreference) using the specified method. KubeFed handles the actual scheduling according to `ReplicaSchedulingPreference`.
+- **SLPOptimizer**: Optimizes `FederatedService` loadbalancing weights across clusters by generating `ServiceLoadbalancingPreference` using the specified method. **A supported controller is required to handle the actual loadbalancing according to `ServiceLoadbalancingPreference`.**
 
 ## Getting Started
 
@@ -45,6 +50,10 @@ Supported KubeFed APIs:
 - `FederatedDeployment [types.kubefed.io/v1beta1]`
 - `ReplicaSchedulingPreference [scheduling.kubefed.io/v1alpha1]`
 - `KubeFedCluster [core.kubefed.io/v1beta1]`
+
+New APIs Provided by WAOFed:
+- `WAOFedConfig [waofed.bitmedia.co.jp/v1beta1]`
+- `ServiceLoadBalancingPreference [waofed.bitmedia.co.jp/v1beta1]`
 
 ### Installation
 
@@ -59,7 +68,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 Deploy the Operator with the following command. It creates `waofed-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
-kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.3.0/waofed.yaml
+kubectl apply -f https://github.com/Nedopro2022/waofed/releases/download/v0.4.0/waofed.yaml
 ```
 
 ### Deploy a `WAOFedConfig` resource
@@ -80,7 +89,14 @@ spec:
       hasAnnotation: waofed.bitmedia.co.jp/scheduling
     optimizer:
       method: "rr"
+  loadbalancing:
+    selector:
+      hasAnnotation: waofed.bitmedia.co.jp/loadbalancing
+    optimizer:
+      method: "rr"
 ```
+
+### Schedule Optimization
 
 #### Scheduling settings (RSPOptimizer)
 
@@ -99,7 +115,7 @@ Supported methods: `rr` (Round-robin, for testing purposes), `wao` ([WAO-Estimat
 > +      any: true
 > ```
 
-### Deploy `FederatedDeployment` resources
+#### Deploy a `FederatedDeployment` resource
 
 > 💡 Ensure the namespace is federated by a `FederatedNamespace` resource before deploying `FederatedDeployment` resources.
 > 
@@ -146,6 +162,7 @@ spec:
     clusterSelector: {}
 ```
 
+#### See the generated `ReplicaSchedulingPreference` resource
 
 > 💡 You can see the resources with the following commands, and see the details by adding `-oyaml`.
 > ```sh
@@ -206,17 +223,116 @@ spec:
 >         - { key: mylabel, operator: Exists }
 > ```
 
-### Load balancing settings
+### Access Optimization
 
-// TODO: not yet implemented
+#### Loadbalancing settings (SLPOptimizer)
 
+> ⚠️ NOTE: A supported controller is required to handle the actual loadbalancing according to `ServiceLoadbalancingPreference`.
+
+SLPOptimizer watches the creation of `FederatedService` resources and generates `ServiceLoadbalancingPreference` resources with optimized workload allocation determined by the specified method.
+
+Supported methods: `rr` (Round-robin, for testing purposes)
+
+`spec.loadbalancing.selector` specifies the conditions for the `FederatedService` resources that KubeFed watches.
+
+> 💡 You can enable SLPOptimizer by default by setting `spec.loadbalancing.selector.any` to true.
+>
+> ```diff
+>    loadbalancing:
+>      selector:
+> -      hasAnnotation: waofed.bitmedia.co.jp/loadbalancing
+> +      any: true
+> ```
+
+#### Deploy `FederatedServices` resources
+
+> 💡 Ensure the namespace is federated by a `FederatedNamespace` resource before deploying `FederatedService` resources.
+> 
+> ```yaml
+> apiVersion: types.kubefed.io/v1beta1
+> kind: FederatedNamespace
+> metadata:
+>   name: default
+>   namespace: default
+> spec:
+>   placement:
+>     clusterSelector: {}
+> ```
+
+When a `FederatedService` with the annotation specified in WAOFedConfig is deployed, SLPOptimizer will detect the resource and generate an `ServiceLoadbalancingPreference`.
+
+```yaml
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: fsvc-sample
+  namespace: default
+  annotations:
+    waofed.bitmedia.co.jp/loadbalancing: ""
+spec:
+  template:
+    spec:
+      selector:
+        app: nginx
+      ports:
+        - name: http
+          port: 80
+  placement:
+    clusterSelector: {}
+```
+
+#### See the generated `ServiceLoadbalancingPreference` resource
+
+> 💡 You can see the resources with the following commands, and see the details by adding `-oyaml`.
+> ```sh
+> $ kubectl get fsvc
+> NAME             AGE
+> fsvc-sample   12s
+> 
+> $ kubectl get slp
+> NAME             AGE
+> fsvc-sample   12s
+> ```
+
+The generated `ServiceLoadbalancingPreference` has an owner reference indicating that it is controlled by the `FederatedService` so that it will be deleted by [GC](https://kubernetes.io/docs/concepts/architecture/garbage-collection/) when the `FederatedService` is deleted.
+
+`spec.clusters` includes all clusters specified in `FederatedService` `spec.placement` (SLPOptimizer parses the selector and retrives clusters), and `spec.clusters[name].weight` is optimized by the method specified in `WAOFedConfig`. This sample uses `rr` so all clusters have a weight of 1.
+
+```yaml
+apiVersion: waofed.bitmedia.co.jp/v1beta1
+kind: ServiceLoadbalancingPreference
+metadata:
+  name: fsvc-sample
+  namespace: default
+  ownerReferences:
+  - apiVersion: types.kubefed.io/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: FederatedService
+    name: fsvc-sample
+    ...
+spec:
+  clusters:
+    cluster1:
+      weight: 1
+    cluster2:
+      weight: 1
+    cluster3:
+      weight: 1
+...
+```
+
+> ⚠️ **Edge cases not covered:**
+>
+> **`placement.clusters` has 0 items**
+> Same as [RSPOptimizer](#deploy-federateddeployment-resources)
 
 ### Uninstallation
 
 Delete the Operator and resources with the following command.
 
 ```sh
-kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.3.0/waofed.yaml
+kubectl delete -f https://github.com/Nedopro2022/waofed/releases/download/v0.4.0/waofed.yaml
 ```
 
 ## Developing
@@ -248,10 +364,11 @@ The script creates K8s clusters `kind-waofed-[0123]`, deploys KubeFed control pl
 The script creates K8s clusters `kind-waofed-test-[01]`, deploys KubeFed control plane on `kind-waofed-test-0`, let all clusters join as member clusters and runs integration tests.
 
 ```sh
-./test/rspoptimizer-reset-clusters.sh
+# setup test clusters
+./test/reset-clusters.sh
 
-# test spec.scheduling.optimizer.method="rr"
-./test/rspoptimizer-rr-run-tests.sh
+# basic tests (tests both scheduling and loadbalancing with "rr" method)
+./test/run-basic-tests.sh
 
 # test spec.scheduling.optimizer.method="wao"
 ./test/rspoptimizer-wao-setup.sh

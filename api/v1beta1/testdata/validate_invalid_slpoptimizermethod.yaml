@@ -4,10 +4,13 @@ metadata:
   name: default
 spec:
   kubefedNamespace: kube-federation-system
-  scheduling:
+  loadbalancing:
     selector:
       any: false
-      hasAnnotation: waofed.bitmedia.co.jp/scheduling
+      hasAnnotation: waofed.bitmedia.co.jp/loadbalancing
     optimizer:
       method: hoge
-  loadbalancing: {}
+    loadbalancer:
+      type: none
+      namespace: ""
+      name: ""

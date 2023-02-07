@@ -1,0 +1,17 @@
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: fsvc-sample4
+  namespace: default
+spec:
+  template:
+    spec:
+      selector:
+        app: nginx
+      ports:
+        - name: http
+          port: 80
+  placement:
+    clusterSelector:
+      matchLabels:
+        mylabel: xxx

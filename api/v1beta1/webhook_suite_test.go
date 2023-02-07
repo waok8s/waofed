@@ -142,7 +142,8 @@ var _ = Describe("WAOFedConfig webhook", func() {
 			want := false
 			testValidate(mustOpen("testdata", "validate_invalid_name.yaml"), want)
 			testValidate(mustOpen("testdata", "validate_invalid_kubefedns.yaml"), want)
-			testValidate(mustOpen("testdata", "validate_invalid_optimizermethod.yaml"), want)
+			testValidate(mustOpen("testdata", "validate_invalid_rspoptimizermethod.yaml"), want)
+			testValidate(mustOpen("testdata", "validate_invalid_slpoptimizermethod.yaml"), want)
 			testValidate(mustOpen("testdata", "rspwao", "validate_invalid_no_estimators.yaml"), want)
 			testValidate(mustOpen("testdata", "rspwao", "validate_invalid_no_clusters.yaml"), want)
 			testValidate(mustOpen("testdata", "rspwao", "validate_invalid_cluster_name.yaml"), want)

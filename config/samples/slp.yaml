@@ -1,0 +1,9 @@
+apiVersion: waofed.bitmedia.co.jp/v1beta1
+kind: ServiceLoadbalancingPreference
+metadata:
+  name: fsvc-sample
+  namespace: default
+spec:
+  clusters:
+    "*":
+      weight: 1

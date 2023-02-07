@@ -40,7 +40,7 @@ func (r *WAOFedConfig) defaultScheduling() {
 
 	// selector
 	if r.Spec.Scheduling.Selector == nil {
-		r.Spec.Scheduling.Selector = &FederatedDeploymentSelector{}
+		r.Spec.Scheduling.Selector = &ResourceSelector{}
 	}
 	if r.Spec.Scheduling.Selector.Any == nil {
 		r.Spec.Scheduling.Selector.Any = pointer.Bool(false)
@@ -76,7 +76,39 @@ func (r *WAOFedConfig) defaultScheduling() {
 func (r *WAOFedConfig) defaultLoadbalancing() {
 	waofedconfiglog.Info("default spec.loadbalancing", "name", r.Name)
 
-	// TODO
+	// selector
+	if r.Spec.LoadBalancing.Selector == nil {
+		r.Spec.LoadBalancing.Selector = &ResourceSelector{}
+	}
+	if r.Spec.LoadBalancing.Selector.Any == nil {
+		r.Spec.LoadBalancing.Selector.Any = pointer.Bool(false)
+	}
+	if r.Spec.LoadBalancing.Selector.HasAnnotation == nil {
+		r.Spec.LoadBalancing.Selector.HasAnnotation = pointer.String(DefaultSLPOptimizerAnnotation)
+	}
+
+	// optimizer
+	if r.Spec.LoadBalancing.Optimizer == nil {
+		r.Spec.LoadBalancing.Optimizer = &SLPOptimizerSettings{}
+	}
+	if r.Spec.LoadBalancing.Optimizer.Method == nil {
+		r.Spec.LoadBalancing.Optimizer.Method = (*SLPOptimizerMethod)(pointer.String(SLPOptimizerMethodRoundRobin))
+	}
+
+	// optimizer specific settings
+	switch *r.Spec.LoadBalancing.Optimizer.Method {
+	case SLPOptimizerMethodRoundRobin:
+	case SLPOptimizerMethodWAO:
+		for _, v := range r.Spec.LoadBalancing.Optimizer.WAOEstimators {
+			if v.Namespace == "" {
+				v.Namespace = waoEstimatorDefaultNamespace
+			}
+			if v.Name == "" {
+				v.Name = waoEstimatorDefaultName
+			}
+		}
+	default:
+	}
 }
 
 //+kubebuilder:webhook:path=/validate-waofed-bitmedia-co-jp-v1beta1-waofedconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=create;update;delete,versions=v1beta1,name=vwaofedconfig.kb.io,admissionReviewVersions=v1
@@ -148,22 +180,27 @@ func (r *WAOFedConfig) validateKubeFedNS() error {
 	return nil
 }
 
+func validateWAOEstimators(es map[string]*WAOEstimatorSetting, jsonPath string) error {
+	if len(es) == 0 {
+		return fmt.Errorf("%s requires 1 or more items", jsonPath)
+	}
+	for k, v := range es {
+		if k == "" {
+			return fmt.Errorf("%s cannot use empty string as key", jsonPath)
+		}
+		if _, err := url.ParseRequestURI(v.Endpoint); err != nil {
+			return fmt.Errorf("%s[k] is not a valid URL: %w", jsonPath, err)
+		}
+	}
+	return nil
+}
+
 func (r *WAOFedConfig) validateScheduling() error {
 	// NOTE: the defaulting webhook ensures method != nil
 	switch *r.Spec.Scheduling.Optimizer.Method {
 	case RSPOptimizerMethodRoundRobin:
 	case RSPOptimizerMethodWAO:
-		if len(r.Spec.Scheduling.Optimizer.WAOEstimators) == 0 {
-			return fmt.Errorf("spec.scheduling.optimizer.waoEstimators requires 1 or more items")
-		}
-		for k, v := range r.Spec.Scheduling.Optimizer.WAOEstimators {
-			if k == "" {
-				return fmt.Errorf("spec.scheduling.optimizer.waoEstimators cannot use empty string as key")
-			}
-			if _, err := url.ParseRequestURI(v.Endpoint); err != nil {
-				return fmt.Errorf("spec.scheduling.optimizer.waoEstimators[k] is not a valid URL: %w", err)
-			}
-		}
+		return validateWAOEstimators(r.Spec.Scheduling.Optimizer.WAOEstimators, "spec.scheduling.optimizer.waoEstimators")
 	default:
 		return fmt.Errorf("invalid spec.scheduling.optimizer.method %s", *r.Spec.Scheduling.Optimizer.Method)
 	}
@@ -171,6 +208,13 @@ func (r *WAOFedConfig) validateScheduling() error {
 }
 
 func (r *WAOFedConfig) validateLoadbalancing() error {
-	// TODO
+	// NOTE: the defaulting webhook ensures method != nil
+	switch *r.Spec.LoadBalancing.Optimizer.Method {
+	case SLPOptimizerMethodRoundRobin:
+	case SLPOptimizerMethodWAO:
+		return validateWAOEstimators(r.Spec.LoadBalancing.Optimizer.WAOEstimators, "spec.loadbalancing.optimizer.waoEstimators")
+	default:
+		return fmt.Errorf("invalid spec.loadbalancing.optimizer.method %s", *r.Spec.LoadBalancing.Optimizer.Method)
+	}
 	return nil
 }

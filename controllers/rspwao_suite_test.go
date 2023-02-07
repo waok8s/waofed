@@ -22,7 +22,7 @@ var (
 		Spec: v1beta1.WAOFedConfigSpec{
 			KubeFedNamespace: testKubeFedNS,
 			Scheduling: &v1beta1.SchedulingSettings{
-				Selector: &v1beta1.FederatedDeploymentSelector{
+				Selector: &v1beta1.ResourceSelector{
 					Any: pointer.Bool(true),
 				},
 				Optimizer: &v1beta1.RSPOptimizerSettings{
@@ -48,8 +48,8 @@ var (
 
 var _ = Describe("WAOFedConfig controller (RSPWAO)", func() {
 
-	BeforeEach(beforeEachFn)
-	AfterEach(afterEachFn)
+	BeforeEach(rspOptimizerBeforeEachFn)
+	AfterEach(rspOptimizerAfterEachFn)
 
 	Context("schedule on clusters (RSPWAO)", func() {
 		type cps map[string]fedschedv1a1.ClusterPreferences
