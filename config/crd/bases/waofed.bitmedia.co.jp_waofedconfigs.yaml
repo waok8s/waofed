@@ -45,21 +45,6 @@ spec:
               loadbalancing:
                 description: LoadBalancing owns load balancing settings.
                 properties:
-                  loadbalancer:
-                    description: LoadBalancer owns load balancer settings that specify
-                      the load balancer used by WAOFed.
-                    properties:
-                      name:
-                        type: string
-                      namespace:
-                        type: string
-                      type:
-                        type: string
-                    required:
-                    - name
-                    - namespace
-                    - type
-                    type: object
                   optimizer:
                     description: Optimizer owns optimizer settings that control how
                       WAOFed controls loadbalancing.

@@ -109,15 +109,6 @@ func (r *WAOFedConfig) defaultLoadbalancing() {
 		}
 	default:
 	}
-
-	// loadbalancer
-	if r.Spec.LoadBalancing.LoadBalancer == nil {
-		r.Spec.LoadBalancing.LoadBalancer = &LoadBalancerSettings{
-			Type:      LoadBalancerTypeNone,
-			Namespace: "",
-			Name:      "",
-		}
-	}
 }
 
 //+kubebuilder:webhook:path=/validate-waofed-bitmedia-co-jp-v1beta1-waofedconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=create;update;delete,versions=v1beta1,name=vwaofedconfig.kb.io,admissionReviewVersions=v1
@@ -224,17 +215,6 @@ func (r *WAOFedConfig) validateLoadbalancing() error {
 		return validateWAOEstimators(r.Spec.LoadBalancing.Optimizer.WAOEstimators, "spec.loadbalancing.optimizer.waoEstimators")
 	default:
 		return fmt.Errorf("invalid spec.loadbalancing.optimizer.method %s", *r.Spec.LoadBalancing.Optimizer.Method)
-	}
-
-	// NOTE: the defaulting webhook ensures loadbalancer != nil and type != nil
-	switch r.Spec.LoadBalancing.LoadBalancer.Type {
-	case LoadBalancerTypeNone:
-	case LoadBalancerTypeHAPRoxy:
-		if r.Spec.LoadBalancing.LoadBalancer.Namespace == "" || r.Spec.LoadBalancing.LoadBalancer.Name == "" {
-			return fmt.Errorf("invalid spec.loadbalancing.loadbalancer.[namespace|name] %s/%s", r.Spec.LoadBalancing.LoadBalancer.Namespace, r.Spec.LoadBalancing.LoadBalancer.Name)
-		}
-	default:
-		return fmt.Errorf("invalid spec.loadbalancing.loadbalancer.type %s", r.Spec.LoadBalancing.LoadBalancer.Type)
 	}
 	return nil
 }
