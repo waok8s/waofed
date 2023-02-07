@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 - 2022-12-23
+
+### Added
+
+- RSPOptimizer now supports [WAO-Estimator](https://github.com/Nedopro2022/wao-estimator) with `optimizer.method: wao`.
+
 ## 0.2.1 - 2022-11-30
 
 ### Fixed
