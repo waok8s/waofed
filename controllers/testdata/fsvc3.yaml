@@ -1,0 +1,17 @@
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: fsvc-sample3
+  namespace: default
+spec:
+  template:
+    spec:
+      selector:
+        app: nginx
+      type: LoadBalancer
+      ports:
+        - name: http
+          port: 80
+  placement:
+    clusters:
+      - name: kind-waofed-test-0

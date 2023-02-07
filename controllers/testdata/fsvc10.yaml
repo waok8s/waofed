@@ -1,0 +1,14 @@
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: fsvc-sample10
+  namespace: default
+spec:
+  template:
+    spec:
+      selector:
+        app: nginx
+      type: LoadBalancer
+      ports:
+        - name: http
+          port: 80

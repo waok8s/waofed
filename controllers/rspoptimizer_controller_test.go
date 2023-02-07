@@ -46,7 +46,7 @@ func Test_optimizeFnRoundRobin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := optimizeFnRoundRobin(context.Background(), tt.args.clusters, nil, nil)
+			got, err := rspOptimizeFnRoundRobin(context.Background(), tt.args.clusters, nil, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("optimizeFnRoundRobin() error = %v, wantErr %v", err, tt.wantErr)
 				return

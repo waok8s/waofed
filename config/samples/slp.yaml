@@ -6,4 +6,4 @@ metadata:
 spec:
   clusters:
     "*":
-      weight: 0
+      weight: 1
