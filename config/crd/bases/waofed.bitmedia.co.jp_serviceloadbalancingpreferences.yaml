@@ -12,6 +12,8 @@ spec:
     kind: ServiceLoadbalancingPreference
     listKind: ServiceLoadbalancingPreferenceList
     plural: serviceloadbalancingpreferences
+    shortNames:
+    - slp
     singular: serviceloadbalancingpreference
   scope: Namespaced
   versions:

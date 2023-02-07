@@ -27,6 +27,7 @@ type ServiceLoadbalancingPreferenceStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:shortName=slp
 
 // ServiceLoadbalancingPreference is the Schema for the serviceloadbalancingpreferences API
 type ServiceLoadbalancingPreference struct {
