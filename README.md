@@ -248,10 +248,11 @@ The script creates K8s clusters `kind-waofed-[0123]`, deploys KubeFed control pl
 The script creates K8s clusters `kind-waofed-test-[01]`, deploys KubeFed control plane on `kind-waofed-test-0`, let all clusters join as member clusters and runs integration tests.
 
 ```sh
-./test/rspoptimizer-reset-clusters.sh
+# setup test clusters
+./test/reset-clusters.sh
 
-# test spec.scheduling.optimizer.method="rr"
-./test/rspoptimizer-rr-run-tests.sh
+# basic tests (tests both scheduling and loadbalancing with "rr" method)
+./test/run-basic-tests.sh
 
 # test spec.scheduling.optimizer.method="wao"
 ./test/rspoptimizer-wao-setup.sh
