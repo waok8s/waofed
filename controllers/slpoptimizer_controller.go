@@ -25,7 +25,7 @@ type SLPOptimizerReconciler struct {
 
 //+kubebuilder:rbac:groups=core.kubefed.io,resources=kubefedclusters,verbs=get;list;watch
 //+kubebuilder:rbac:groups=types.kubefed.io,resources=federatedservices,verbs=get;list;watch
-//+kubebuilder:rbac:groups=waofed.bitmedia.co.jp,resources=serviceloadbalancingpreference,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=waofed.bitmedia.co.jp,resources=serviceloadbalancingpreferences,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=waofed.bitmedia.co.jp,resources=waofedconfigs,verbs=get;list;watch
 
 // SetupWithManager sets up the controller with the Manager.
