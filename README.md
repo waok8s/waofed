@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> This project has been archived because [KubeFed](https://github.com/kubernetes-retired/kubefed), which this project relies on, is no longer under active development.
+> We are currently exploring alternative approaches for applying WAO in multi-cluster environments.
+
 # waofed
 
 [![GitHub](https://img.shields.io/github/license/Nedopro2022/waofed)](https://github.com/Nedopro2022/waofed/blob/main/LICENSE)
